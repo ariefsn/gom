@@ -13,10 +13,11 @@ import (
 
 // Mongo = Mongo struct
 type Mongo struct {
-	Config     MongoConfig
-	Client     *mongo.Client
-	Context    context.Context
-	Collection *mongo.Collection
+	Config        MongoConfig
+	Client        *mongo.Client
+	Context       context.Context
+	Collection    *mongo.Collection
+	ContextCancel context.CancelFunc
 }
 
 // MongoConfig = Mongo config struct
@@ -39,9 +40,10 @@ func (m *Mongo) SetContext(seconds time.Duration) {
 		seconds = 30
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), seconds*time.Second)
+	ctx, ctxCancel := context.WithTimeout(context.Background(), seconds*time.Second)
 
 	m.Context = ctx
+	m.ContextCancel = ctxCancel
 }
 
 // SetConfig = Set config of mongo

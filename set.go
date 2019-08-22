@@ -1,17 +1,16 @@
 package gom
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
+	"strconv"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"go.mongodb.org/mongo-driver/bson"
-
-	"go.mongodb.org/mongo-driver/mongo"
-
-	"github.com/eaciit/toolkit"
 )
 
 // Set = Set struct
@@ -21,12 +20,11 @@ type Set struct {
 	gom       *Gom
 	filter    interface{}
 	pipe      []bson.M
-	sort      struct {
-		field  string
-		sortBy int
-	}
-	skip  *int
-	limit *int
+	sortField *string
+	sortBy    *int
+	skip      *int
+	limit     *int
+	command   *Command
 }
 
 // NewSet = init new set
@@ -37,15 +35,36 @@ func NewSet(gom *Gom) *Set {
 	s.pipe = nil
 	s.skip = nil
 	s.limit = nil
+	s.result = nil
+	s.tableName = ""
+	s.sortField = nil
+	s.sortBy = nil
+	s.command = NewCommand(s)
 
 	return s
 }
 
-// Table = set table name
+func (s *Set) reset() {
+	s.filter = bson.M{}
+	s.limit = nil
+	s.pipe = nil
+	s.result = nil
+	s.skip = nil
+	s.sortBy = nil
+	s.sortField = nil
+	s.tableName = ""
+}
+
+// Table = set table/collection name
 func (s *Set) Table(tableName string) *Set {
 	s.tableName = tableName
 
 	return s
+}
+
+// Cmd = choose Command
+func (s *Set) Cmd() *Command {
+	return s.command
 }
 
 // Result = set target of result
@@ -71,12 +90,14 @@ func (s *Set) Limit(limit int) *Set {
 
 // Sort = set sort data
 func (s *Set) Sort(field, sortBy string) *Set {
-	s.sort.field = field
-	s.sort.sortBy = -1
+	s.sortField = &field
+	sort := -1
 
 	if strings.ToLower(sortBy) == "asc" {
-		s.sort.sortBy = 1
+		sort = 1
 	}
+
+	s.sortBy = &sort
 
 	return s
 }
@@ -85,38 +106,27 @@ func (s *Set) Sort(field, sortBy string) *Set {
 func (s *Set) Filter(filter *Filter) *Set {
 
 	if filter != nil {
-		main := toolkit.M{}
-		inside := toolkit.M{}
+		main := bson.M{}
+		inside := bson.M{}
 
 		switch filter.Op {
 		case OpAnd, OpOr:
-			insideArr := []toolkit.M{}
-			for _, e := range filter.Items {
-				if string(e.Op) == OpSort {
-					toolkit.Println("Hmmm", filter.Op)
-					insideArr = append(insideArr, toolkit.M{
-						string(e.Op): toolkit.M{
-							e.Field: e.Value,
-						},
-					})
-				} else {
-					insideArr = append(insideArr, toolkit.M{
-						e.Field: toolkit.M{
-							string(e.Op): e.Value,
-						},
-					})
-				}
-				inside.Set(string(filter.Op), insideArr)
+			insideArr := []interface{}{}
+
+			for _, fi := range filter.Items {
+				fRes := s.Filter(fi)
+				insideArr = append(insideArr, fRes.filter)
 			}
-			main = inside
 
-		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin:
-			inside.Set(string(filter.Op), filter.Value)
-			main.Set(filter.Field, inside)
+			main[string(filter.Op)] = insideArr
 
-		case OpSort:
-			inside.Set(string(filter.Op), filter.Value)
-			main.Set(filter.Field, inside)
+		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort:
+			inside[string(filter.Op)] = filter.Value
+			main[filter.Field] = inside
+
+		// case OpSort:
+		// 	inside.Set(string(filter.Op), filter.Value)
+		// 	main.Set(filter.Field, inside)
 
 		case OpBetween, OpRange:
 			gt := 0
@@ -127,36 +137,41 @@ func (s *Set) Filter(filter *Filter) *Set {
 				lt = filter.Value.([]interface{})[1].(int)
 			}
 
-			main.Set(filter.Field, toolkit.M{
+			main[filter.Field] = bson.M{
 				"$gt": gt,
 				"$lt": lt,
-			})
+			}
 
 		case OpStartWith:
-			main.Set(filter.Field, toolkit.M{}.
-				Set("$regex", fmt.Sprintf("^%s.*$", filter.Value)).
-				Set("$options", "i"))
+			main[filter.Field] = bson.M{
+				"$regex":   fmt.Sprintf("^%s.*$", filter.Value),
+				"$options": "i",
+			}
 
 		case OpEndWith:
-			main.Set(filter.Field, toolkit.M{}.
-				Set("$regex", fmt.Sprintf("^.*%s$", filter.Value)).
-				Set("$options", "i"))
+			main[filter.Field] = bson.M{
+				"$regex":   fmt.Sprintf("^.*%s$", filter.Value),
+				"$options": "i",
+			}
 
 		case OpContains:
 			if len(filter.Value.([]string)) > 1 {
 				bfs := []interface{}{}
 				for _, ff := range filter.Value.([]string) {
-					pfm := toolkit.M{}
-					pfm.Set(filter.Field, toolkit.M{}.
-						Set("$regex", fmt.Sprintf(".*%s.*", ff)).
-						Set("$options", "i"))
+					pfm := bson.M{}
+					pfm[filter.Field] = bson.M{
+						"$regex":   fmt.Sprintf(".*%s.*", ff),
+						"$options": "i",
+					}
+
 					bfs = append(bfs, pfm)
 				}
-				main.Set("$or", bfs)
+				main["$or"] = bfs
 			} else {
-				main.Set(filter.Field, toolkit.M{}.
-					Set("$regex", fmt.Sprintf(".*%s.*", filter.Value.([]string)[0])).
-					Set("$options", "i"))
+				main[filter.Field] = bson.M{
+					"$regex":   fmt.Sprintf(".*%s.*", filter.Value.([]string)[0]),
+					"$options": "i",
+				}
 			}
 
 		case OpNot:
@@ -187,15 +202,15 @@ func (s *Set) buildPipe() []bson.M {
 	} else {
 		if s.filter != nil {
 			pipe = append(pipe, bson.M{
-				"$match": s.filter.(toolkit.M),
+				"$match": s.filter.(bson.M),
 			})
 		}
 	}
 
-	if s.sort.field != "" {
+	if s.sortField != nil {
 		pipe = append(pipe, bson.M{
 			"$sort": bson.M{
-				s.sort.field: s.sort.sortBy,
+				*s.sortField: s.sortBy,
 			},
 		})
 	}
@@ -215,83 +230,101 @@ func (s *Set) buildPipe() []bson.M {
 	return pipe
 }
 
-// Get = get data. it'll use Filter as default. if pipe not null => Filter will be ignored
-func (s *Set) Get() error {
-	tableName := s.tableName
-	result := s.result
+// buildData = buildData from struct/map to bson M
+func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
+	var result interface{}
+	dataM := bson.M{}
 
-	resultVal := reflect.ValueOf(result)
-	if resultVal.Kind() != reflect.Ptr && resultVal.Kind() != reflect.Slice {
-		return errors.New("result argument must be a slice")
+	rv := reflect.ValueOf(data)
+
+	if rv.Kind() != reflect.Ptr {
+		return nil, errors.New("data argument must be pointer")
 	}
 
-	client := s.gom.Mongo.Client
+	switch rv.Elem().Kind() {
+	case reflect.Struct:
+		s, _ := json.Marshal(rv.Interface())
 
-	collection := client.Database(s.gom.Mongo.Config.Database).Collection(tableName)
+		var mRaw map[string]json.RawMessage
 
-	var cur *mongo.Cursor
-	var err error
+		json.Unmarshal(s, &mRaw)
 
-	// cur, err = collection.Aggregate(s.gom.Mongo.Context, s.pipe)
-	// } else {
-	// 	cur, err = collection.Find(s.gom.Mongo.Context, s.filter)
-	// }
-
-	cur, err = collection.Aggregate(s.gom.Mongo.Context, s.buildPipe())
-
-	defer cur.Close(s.gom.Mongo.Context)
-
-	if err != nil {
-		log.Fatal("Error finding all documents: ", err)
-	}
-
-	cur.All(s.gom.Mongo.Context, result)
-
-	return nil
-}
-
-// GetOne = get one data. it'll use Filter as default, pipe ignored.
-func (s *Set) GetOne() (err error) {
-	tableName := s.tableName
-	result := s.result
-
-	resultVal := reflect.ValueOf(result)
-
-	// if resultVal.Kind() == reflect.Slice {
-	if resultVal.Kind() != reflect.Ptr && resultVal.Kind() != reflect.Slice {
-		err = errors.New("result argument must be a slice")
-	} else {
-		client := s.gom.Mongo.Client
-
-		collection := client.Database(s.gom.Mongo.Config.Database).Collection(tableName)
-
-		var err error
-
-		err = collection.FindOne(s.gom.Mongo.Context, s.filter).Decode(result)
-
-		if err != nil {
-			err = errors.New(toolkit.Sprintf("Error finding document: %s", err.Error()))
+		validateJSONRaw := func(k string, v json.RawMessage, m bson.M) {
+			if k == "_id" {
+				var oid primitive.ObjectID
+				err := json.Unmarshal(v, &oid)
+				if err == nil {
+					m[k] = oid
+					return
+				}
+				m[k] = v
+			} else {
+				s := string(v)
+				i, err := strconv.ParseInt(s, 10, 64)
+				if err == nil {
+					m[k] = i
+					return
+				}
+				f, err := strconv.ParseFloat(s, 64)
+				if err == nil {
+					m[k] = f
+					return
+				}
+				var itf interface{}
+				err = json.Unmarshal(v, &itf)
+				if err == nil {
+					m[k] = itf
+					return
+				}
+				m[k] = v
+			}
 		}
 
+		for k, v := range mRaw {
+			if includeID {
+				validateJSONRaw(k, v, dataM)
+			} else {
+				if k != "_id" {
+					validateJSONRaw(k, v, dataM)
+				}
+			}
+		}
+		result = dataM
+
+	case reflect.Map:
+		v := reflect.ValueOf(rv.Elem().Interface())
+
+		for _, key := range v.MapKeys() {
+			value := v.MapIndex(key)
+			if includeID {
+				dataM[key.String()] = value.Interface()
+			} else {
+				if key.String() != "_id" {
+					dataM[key.String()] = value.Interface()
+				}
+			}
+		}
+
+		result = dataM
+
+	case reflect.Slice:
+		v := reflect.ValueOf(rv.Elem().Interface())
+
+		datas := make([]interface{}, 0)
+		for i := 0; i < v.Len(); i++ {
+			value := v.Index(i).Interface()
+			datas = append(datas, value)
+		}
+
+		result = datas
+
+	default:
+		return nil, errors.New("data argument must be a struct or map")
 	}
 
-	return nil
+	if result == nil {
+		return nil, errors.New("data argument can't be empty")
+	}
+
+	return result, nil
 }
-
-// func (s *Set) Insert(data interface{}) {
-// 	client := s.gom.Mongo.Client
-
-// 	collection := client.Database(s.gom.Mongo.Config.Database).Collection(tableName)
-// 	cur, err := collection.Find(s.gom.Mongo.Context, s.filter)
-
-// 	defer cur.Close(s.gom.Mongo.Context)
-
-// 	if err != nil {
-// 		log.Fatal("Error finding all documents: ", err)
-// 	}
-
-// 	cur.All(s.gom.Mongo.Context, result)
-
-// 	res, err := collection.InsertOne(ctx, bson.M{"name": "pi", "value": 3.14159})
-// 	id := res.InsertedID
-// }

@@ -12,9 +12,33 @@ type Hero struct {
 	Age      int                `json:"Age" bson:"Age"`
 }
 
+type Herox struct {
+	ID       string `json:"_id" bson:"_id"`
+	Name     string `json:"Name" bson:"Name"`
+	RealName string `json:"RealName" bson:"RealName"`
+	Age      int    `json:"Age" bson:"Age"`
+}
+
+func NewHero(name, realName string, age int) *Hero {
+	h := new(Hero)
+	h.ID = primitive.NewObjectID()
+	h.Name = name
+	h.RealName = realName
+	h.Age = age
+
+	return h
+}
+
 // DummyData = Dummy data of hero
 func DummyData() []Hero {
+
 	return []Hero{
+		Hero{
+			ID:       primitive.NewObjectID(),
+			Name:     "Aquaman",
+			RealName: "Jason Momoa",
+			Age:      45,
+		},
 		Hero{
 			ID:       primitive.NewObjectID(),
 			Name:     "Ironman",
