@@ -72,10 +72,20 @@ func UpdateMap(g *gom.Gom) {
 	}
 }
 
-// Delete = example delete
-func Delete(g *gom.Gom) {
-	toolkit.Println("===== Delete =====")
-	err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().Delete()
+// DeleteOne = example delete one data
+func DeleteOne(g *gom.Gom) {
+	toolkit.Println("===== Delete One =====")
+	err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
+	if err != nil {
+		toolkit.Println(err.Error())
+		return
+	}
+}
+
+// DeleteAll = example delete all
+func DeleteAll(g *gom.Gom) {
+	toolkit.Println("===== Delete All =====")
+	err := g.Set().Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return

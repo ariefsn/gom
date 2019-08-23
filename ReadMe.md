@@ -12,8 +12,8 @@
 
 ## Dependencies
 
-> [Mongo Go Driver](https://github.com/mongodb/mongo-go-driver)
-> [Toolkit](https://github.com/eaciit/toolkit)
+> 1. [Mongo Go Driver](https://github.com/mongodb/mongo-go-driver)
+> 2. [Toolkit](https://github.com/eaciit/toolkit)
 
 ## Installation
 
@@ -23,13 +23,13 @@
 
 ## How to use
 
-- Initialize
+- Create Instance
 
 ```go
   g := gom.NewGom()
 ```
 
-- Set config
+- Set Config
 
 ```go
   cfg := gom.MongoConfig{
@@ -41,72 +41,87 @@
   }
 ```
 
-- Init Gom
+- Initialize
 
 ```go
   g.Init(cfg)
 ```
 
-> That's it! Gom has ready to launch! :)
-> Check full documentation
+> That's it! Gom has ready to use! :)
+> Check full [demo](https://github.com/ariefsn/gom/blob/master/examples/demo/demo.go)
 
 - Gom Filter
 
 ```go
   // Equal
-  gom.Eq(<Field>, <Value>)
+  // gom.Eq(<Field>, <Value>)
+  gom.Eq("Name", "Ironman")
 
   // Not Equal
-  gom.Ne(<Field>, <Value>)
+  // gom.Ne(<Field>, <Value>)
+  gom.Ne("Name", "Batman")
 
   // Greater Than
-  gom.Gt(<Field>, <Value>)
+  // gom.Gt(<Field>, <Value>)
+  gom.Gt("Age", 27)
 
   // Greater Than Equal
-  gom.Gte(<Field>, <Value>)
+  // gom.Gte(<Field>, <Value>)
+  gom.Gte("Age", 28)
 
   // Less Than
-  gom.Lt(<Field>, <Value>)
+  // gom.Lt(<Field>, <Value>)
+  gom.Lt("Age", 32)
 
   // Less Than Equal
-  gom.Lte(<Field>, <Value>)
+  // gom.Lte(<Field>, <Value>)
+  gom.Lte("Age", 33)
 
   // Range
-  gom.Range(<Field>, <From Value>, <To Value>)
+  // gom.Range(<Field>, <From Value>, <To Value>)
+  gom.Range("Age", 20, 28)
 
   // Between
-  gom.Between(<Field>, <From Value>, <To Value>)
+  // gom.Between(<Field>, <From Value>, <To Value>)
+  gom.Between("Age", 20, 28)
 
   // In
-  gom.In(<Field>, <Values...>)
+  // gom.In(<Field>, <Values...>)
+  gom.In("Name", "Green Arrow", "Red Arrow")
 
   // Not In
-  gom.Nin(<Field>, <Values...>)
+  // gom.Nin(<Field>, <Values...>)
+  gom.Nin("Name", "Batman", "Superman")
 
   // Contains
-  gom.Contains(<Field>, <Values...>)
+  // gom.Contains(<Field>, <Value>)
+  gom.Contains("Name", "der")
 
   // Start With
-  gom.StartWith(<Field>, <Values...>)
+  // gom.StartWith(<Field>, <Value>)
+  gom.StartWith("Real Name", "Tony")
 
   // End With
-  gom.EndWith(<Field>, <Values...>)
+  // gom.EndWith(<Field>, <Value>)
+  gom.EndWith("Name", "man")
 
   // And
-  gom.And(<Filters...>)
+  // gom.And(<Filters...>)
+  gom.And(gom.Eq("Age", 45), gom.StartWith("Name", "A"))
 
   // Or
-  gom.And(<Filters...>)
-
-  // Sort
-  gom.Sort(<Field>, <SortType>)
+  // gom.Or(<Filters...>)
+  gom.Or(gom.Eq("Age", 45), gom.StartWith("Name", "A"))
 
 ```
 
 - Gom Command
+
   - Get
+  > Get all data. It'll use Filter as default. if pipe not null => Filter will be ignored
 
   ```go
+  
     res := []models.Hero{}
     err := g.Set().Table("hero").Result(&res).Cmd().Get()
     if err != nil {
@@ -119,6 +134,7 @@
   ```
 
   - Get One
+  > Get one data. It'll use Filter as default, pipe ignored.
 
   ```go
     res := models.Hero{}
@@ -131,6 +147,7 @@
   ```
 
   - Insert
+  > insert one data, for multiple data use InsertAll
 
   ```go
     hero := models.NewHero("Wolverine", "Hugh Jackman", 40)
@@ -142,6 +159,7 @@
   ```
   
   - Insert All
+  > InsertAll = insert multiple data
 
   ```go
     heroes := models.DummyData()
@@ -153,6 +171,7 @@
   ```
 
   - Update
+  > Update data with filter, pipe will ignored
 
   ```go
     hero := models.NewHero("Wonderwoman", "Gal Gadot", 34)
@@ -163,10 +182,22 @@
     }
   ```
 
-  - Delete
+  - Delete One
+  > Delete one data with filter, pipe will ignored
 
   ```go
-    err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().Delete()
+    err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
+    if err != nil {
+      toolkit.Println(err.Error())
+      return
+    }
+  ```
+
+  - Delete All
+  > Delete all data with filter, pipe will ignored
+
+  ```go
+    err := g.Set().Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
     if err != nil {
       toolkit.Println(err.Error())
       return
@@ -174,6 +205,7 @@
   ```
 
   - Sort
+  > Sort results ascending or descending
 
   ```go
     res := []models.Hero{}
@@ -186,7 +218,23 @@
     }
   ```
 
+  - Skip & Limit
+  > Set skip & limit for results
+
+  ```go
+    res := []models.Hero{}
+    err := g.Set().Table("hero").Result(&res).Skip(0).Limit(3).Cmd().Get()
+    if err != nil {
+      toolkit.Println(err.Error())
+      return
+    }
+    for _, h := range res {
+      toolkit.Println(h)
+    }
+  ```
+
   - Filter
+  > Set filter data
 
   ```go
     res := []models.Hero{}
@@ -202,6 +250,7 @@
   ```
 
   - Pipe
+  > Set custom pipe if want to more flexible aggregate
 
   ```go
     res := []models.Hero{}
@@ -231,5 +280,6 @@
 
 ## Thanks to
 
-> [MongoDB](https://github.com/mongodb/)
-> [Eaciit](https://github.com/eaciit/)
+> - Allah :blush:
+> - [MongoDB](https://github.com/mongodb/)
+> - [Eaciit](https://github.com/eaciit/)
