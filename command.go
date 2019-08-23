@@ -24,13 +24,17 @@ func NewCommand(s *Set) *Command {
 }
 
 // Get = get data. it'll use Filter as default. if pipe not null => Filter will be ignored
-func (c *Command) Get() error {
+func (c *Command) Get() (int64, int64, error) {
 	tableName := c.set.tableName
 	result := c.set.result
 
+	if result == nil {
+		return 0, 0, errors.New("result argument must be set")
+	}
+
 	resultVal := reflect.ValueOf(result)
 	if resultVal.Kind() != reflect.Ptr && resultVal.Kind() != reflect.Slice {
-		return errors.New("result argument must be a slice")
+		return 0, 0, errors.New("result argument must be a slice")
 	}
 
 	client := c.set.gom.Mongo.Client
@@ -45,12 +49,29 @@ func (c *Command) Get() error {
 	defer cur.Close(c.set.gom.Mongo.Context)
 
 	if err != nil {
-		return errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
+		return 0, 0, errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
 	}
 
 	cur.All(c.set.gom.Mongo.Context, result)
 
-	return nil
+	countTotal, _ := collection.EstimatedDocumentCount(c.set.gom.Mongo.Context)
+
+	countFilter := int64(0)
+
+	if len(c.set.pipe) == 0 {
+		countFilter, _ = collection.CountDocuments(c.set.gom.Mongo.Context, c.set.filter)
+	} else {
+		f := bson.M{}
+		for _, e := range c.set.buildPipe() {
+			if e["$match"] != nil {
+				f = e["$match"].(bson.M)
+				break
+			}
+		}
+		countFilter, _ = collection.CountDocuments(c.set.gom.Mongo.Context, f)
+	}
+
+	return countFilter, countTotal, nil
 }
 
 // GetOne = get one data. it'll use Filter as default, pipe ignored.
@@ -58,9 +79,12 @@ func (c *Command) GetOne() error {
 	tableName := c.set.tableName
 	result := c.set.result
 
+	if result == nil {
+		return errors.New("result argument must be set")
+	}
+
 	resultVal := reflect.ValueOf(result)
 
-	// if resultVal.Kind() == reflect.Slice {
 	if resultVal.Kind() != reflect.Ptr {
 		return errors.New("result argument must be a pointer")
 	}
@@ -83,7 +107,7 @@ func (c *Command) GetOne() error {
 }
 
 // Insert = insert one data, for multiple data use InsertAll
-func (c *Command) Insert(data interface{}) error {
+func (c *Command) Insert(data interface{}) (interface{}, error) {
 	client := c.set.gom.Mongo.Client
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
@@ -91,23 +115,23 @@ func (c *Command) Insert(data interface{}) error {
 	dataM, err := c.set.buildData(data, true)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	res, err := collection.InsertOne(c.set.gom.Mongo.Context, dataM)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	id := res.InsertedID
 
 	toolkit.Println("Inserted ID:", id)
-	return nil
+	return id, nil
 }
 
 // InsertAll = insert multiple data
-func (c *Command) InsertAll(data interface{}) error {
+func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
 	client := c.set.gom.Mongo.Client
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
@@ -115,19 +139,19 @@ func (c *Command) InsertAll(data interface{}) error {
 	datas, err := c.set.buildData(data, true)
 
 	if err != nil {
-		return err
+		return []interface{}{}, err
 	}
 
 	res, err := collection.InsertMany(c.set.gom.Mongo.Context, datas.([]interface{}))
 
 	if err != nil {
-		return err
+		return []interface{}{}, err
 	}
 
 	ids := res.InsertedIDs
 
 	toolkit.Println("Inserted IDs:", ids)
-	return nil
+	return ids, nil
 }
 
 // Update = update data with filter or pipe
@@ -189,7 +213,7 @@ func (c *Command) DeleteOne() error {
 }
 
 // DeleteAll = delete all data with filter or pipe
-func (c *Command) DeleteAll() error {
+func (c *Command) DeleteAll() (int64, error) {
 	client := c.set.gom.Mongo.Client
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
@@ -197,14 +221,31 @@ func (c *Command) DeleteAll() error {
 	res, err := collection.DeleteMany(c.set.gom.Mongo.Context, c.set.filter)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if res.DeletedCount == 0 {
-		return errors.New("Documents not found")
+		return 0, errors.New("Documents not found")
 	}
 
 	toolkit.Println("Document deleted: ", res.DeletedCount)
+
+	return res.DeletedCount, nil
+}
+
+// Drop = drop table/collection
+func (c *Command) Drop() error {
+	client := c.set.gom.Mongo.Client
+
+	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+
+	err := collection.Drop(c.set.gom.Mongo.Context)
+
+	if err != nil {
+		return err
+	}
+
+	toolkit.Println(toolkit.Sprintf("Collection %s has been deleted", c.set.tableName))
 
 	return nil
 }

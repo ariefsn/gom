@@ -118,23 +118,24 @@
 - Gom Command
 
   - Get
-  > Get all data. It'll use Filter as default. if pipe not null => Filter will be ignored
+  > Get all data. It'll use Filter as default. if pipe not null then Filter will be ignored. This command returns countFilterData `int64`, countAllData `int64`, and `error`
 
   ```go
   
     res := []models.Hero{}
-    err := g.Set().Table("hero").Result(&res).Cmd().Get()
+    countFilterData, countAllData, err := g.Set().Table("hero").Result(&res).Cmd().Get()
     if err != nil {
       toolkit.Println(err.Error())
       return 0
     }
+    toolkit.Println("Data found", countFilterData, "of", countAllData )
     for _, h := range res {
       toolkit.Println(h)
     }
   ```
 
   - Get One
-  > Get one data. It'll use Filter as default, pipe ignored.
+  > Get one data. It'll use Filter as default, pipe ignored. This command return `error`.
 
   ```go
     res := models.Hero{}
@@ -147,11 +148,11 @@
   ```
 
   - Insert
-  > insert one data, for multiple data use InsertAll
+  > Insert one data, for multiple data use InsertAll. This command returns insertedID `interface{}` and `error`.
 
   ```go
     hero := models.NewHero("Wolverine", "Hugh Jackman", 40)
-    err := g.Set().Table("hero").Cmd().Insert(hero)
+    _, err := g.Set().Table("hero").Cmd().Insert(hero)
     if err != nil {
       toolkit.Println(err.Error())
       return
@@ -159,11 +160,11 @@
   ```
   
   - Insert All
-  > InsertAll = insert multiple data
+  > Insert multiple data. This command returns insertedIDs `[]interface{}` and `error`
 
   ```go
     heroes := models.DummyData()
-    err := g.Set().Table("hero").Cmd().InsertAll(&heroes)
+    _, err := g.Set().Table("hero").Cmd().InsertAll(&heroes)
     if err != nil {
       toolkit.Println(err.Error())
       return
@@ -171,7 +172,7 @@
   ```
 
   - Update
-  > Update data with filter, pipe will ignored
+  > Update data with filter, pipe will ignored. This command return `error`.
 
   ```go
     hero := models.NewHero("Wonderwoman", "Gal Gadot", 34)
@@ -183,7 +184,7 @@
   ```
 
   - Delete One
-  > Delete one data with filter, pipe will ignored
+  > Delete one data with filter, pipe will ignored. This command return `error`.
 
   ```go
     err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
@@ -194,10 +195,10 @@
   ```
 
   - Delete All
-  > Delete all data with filter, pipe will ignored
+  > Delete all data with filter, pipe will ignored. This command return totalDeletedDocuments `int64` and `error`.
 
   ```go
-    err := g.Set().Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
+    _, err := g.Set().Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
     if err != nil {
       toolkit.Println(err.Error())
       return
