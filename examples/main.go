@@ -28,7 +28,7 @@ func main() {
 		demo.GetAll(g)
 		demo.UpdateMap(g)
 		demo.GetAll(g)
-		demo.Delete(g)
+		demo.DeleteOne(g)
 		demo.GetAll(g)
 	}
 	demo.GetOne(g)
@@ -49,4 +49,6 @@ func main() {
 	demo.FilterOr(g)
 	demo.Sort(g, "asc")
 	demo.Sort(g, "desc")
+	demo.DeleteAll(g)
+	demo.GetAll(g)
 }

@@ -163,8 +163,8 @@ func (c *Command) Update(data interface{}) error {
 	return nil
 }
 
-// Delete = delete data with filter or pipe
-func (c *Command) Delete() error {
+// DeleteOne = delete one data with filter or pipe
+func (c *Command) DeleteOne() error {
 	client := c.set.gom.Mongo.Client
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
@@ -174,6 +174,27 @@ func (c *Command) Delete() error {
 	}
 
 	res, err := collection.DeleteOne(c.set.gom.Mongo.Context, c.set.filter)
+
+	if err != nil {
+		return err
+	}
+
+	if res.DeletedCount == 0 {
+		return errors.New("Documents not found")
+	}
+
+	toolkit.Println("Document deleted: ", res.DeletedCount)
+
+	return nil
+}
+
+// DeleteAll = delete all data with filter or pipe
+func (c *Command) DeleteAll() error {
+	client := c.set.gom.Mongo.Client
+
+	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+
+	res, err := collection.DeleteMany(c.set.gom.Mongo.Context, c.set.filter)
 
 	if err != nil {
 		return err
