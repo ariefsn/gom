@@ -1,7 +1,12 @@
 package gom
 
 import (
+	"context"
+	"errors"
+
+	"github.com/eaciit/toolkit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // Gom struct
@@ -15,21 +20,21 @@ func NewGom() *Gom {
 }
 
 // Init = Init
-func (d *Gom) Init(config MongoConfig) {
-	d.Mongo.SetConfig(config)
-	d.Mongo.SetContext(30)
-	d.Mongo.SetClient()
+func (g *Gom) Init(config MongoConfig) {
+	g.Mongo.SetConfig(config)
+	g.Mongo.SetContext(30)
+	g.Mongo.SetClient()
 }
 
 // Set = Get set query with gom
-func (d *Gom) Set() *Set {
-	s := NewSet(d)
+func (g *Gom) Set() *Set {
+	s := NewSet(g)
 
 	return s
 }
 
 // ObjectIDFromHex = make object id from hex
-func (d *Gom) ObjectIDFromHex(s string) primitive.ObjectID {
+func (g *Gom) ObjectIDFromHex(s string) primitive.ObjectID {
 	var oid [12]byte
 
 	o, err := primitive.ObjectIDFromHex(s)
@@ -41,4 +46,17 @@ func (d *Gom) ObjectIDFromHex(s string) primitive.ObjectID {
 	copy(oid[:], o[:])
 
 	return oid
+}
+
+// CheckClient = Check connection successfull or not
+func (g *Gom) CheckClient() error {
+	err := g.Mongo.Client.Ping(context.Background(), readpref.Primary())
+
+	if err != nil {
+		return errors.New(toolkit.Sprintf("Couldn't connect to database : %s", err.Error()))
+	}
+
+	toolkit.Println(toolkit.Sprintf("Connected to database: %s", g.Mongo.ConnectionString))
+
+	return nil
 }

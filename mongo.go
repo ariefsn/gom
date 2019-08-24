@@ -8,16 +8,16 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // Mongo = Mongo struct
 type Mongo struct {
-	Config        MongoConfig
-	Client        *mongo.Client
-	Context       context.Context
-	Collection    *mongo.Collection
-	ContextCancel context.CancelFunc
+	Config           MongoConfig
+	Client           *mongo.Client
+	Context          context.Context
+	Collection       *mongo.Collection
+	ContextCancel    context.CancelFunc
+	ConnectionString string
 }
 
 // MongoConfig = Mongo config struct
@@ -75,16 +75,7 @@ func (m *Mongo) SetClient() {
 		log.Fatal(err)
 	}
 
+	m.ConnectionString = connectionString
+
 	m.Client = client
-}
-
-// CheckClient = Ping the client
-func (m *Mongo) CheckClient() {
-	err := m.Client.Ping(context.Background(), readpref.Primary())
-
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Couldn't connect to database : %s", err.Error()))
-	} else {
-		log.Println(fmt.Sprintf("Connected to database"))
-	}
 }

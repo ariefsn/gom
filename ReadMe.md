@@ -23,6 +23,14 @@
 
 ## How to use
 
+- Import
+
+```go
+  import (
+    "github.com/ariefsn/gom"
+  )
+```
+
 - Create Instance
 
 ```go
@@ -49,6 +57,18 @@
 
 > That's it! Gom has ready to use! :)
 > Check full [demo](https://github.com/ariefsn/gom/blob/master/examples/demo/demo.go)
+
+- Check
+
+> You can check connection with `CheckClient()`
+
+```go
+  err := g.CheckClient()
+
+  if err != nil {
+    toolkit.Println(toolkit.Sprintf("Connection Error: %s", err.Error()))
+  }
+```
 
 - Gom Filter
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/ariefsn/gom/examples/demo"
+	"github.com/eaciit/toolkit"
 
 	"github.com/ariefsn/gom"
 )
@@ -18,6 +19,12 @@ func main() {
 	}
 
 	g.Init(cfg)
+
+	err := g.CheckClient()
+
+	if err != nil {
+		toolkit.Println(toolkit.Sprintf("Connection Error: %s", err.Error()))
+	}
 
 	if demo.GetAll(g) == 0 {
 		demo.InsertStruct(g)
