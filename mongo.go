@@ -14,9 +14,8 @@ import (
 type Mongo struct {
 	Config           MongoConfig
 	Client           *mongo.Client
-	Context          context.Context
+	ContextTimeout   time.Duration
 	Collection       *mongo.Collection
-	ContextCancel    context.CancelFunc
 	ConnectionString string
 }
 
@@ -34,16 +33,13 @@ func NewMongo() *Mongo {
 	return new(Mongo)
 }
 
-// SetContext = Set context with seconds as param
-func (m *Mongo) SetContext(seconds time.Duration) {
+// SetContextTimeout = Set context with seconds as param
+func (m *Mongo) SetContextTimeout(seconds time.Duration) {
 	if &seconds == nil {
 		seconds = 30
 	}
 
-	ctx, ctxCancel := context.WithTimeout(context.Background(), seconds*time.Second)
-
-	m.Context = ctx
-	m.ContextCancel = ctxCancel
+	m.ContextTimeout = seconds
 }
 
 // SetConfig = Set config of mongo

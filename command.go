@@ -39,27 +39,30 @@ func (c *Command) Get() (int64, int64, error) {
 
 	client := c.set.gom.Mongo.Client
 
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
 
 	var cur *mongo.Cursor
 	var err error
 
-	cur, err = collection.Aggregate(c.set.gom.Mongo.Context, c.set.buildPipe())
+	cur, err = collection.Aggregate(ctx, c.set.buildPipe())
 
-	defer cur.Close(c.set.gom.Mongo.Context)
+	defer cur.Close(ctx)
 
 	if err != nil {
 		return 0, 0, errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
 	}
 
-	cur.All(c.set.gom.Mongo.Context, result)
+	cur.All(ctx, result)
 
-	countTotal, _ := collection.EstimatedDocumentCount(c.set.gom.Mongo.Context)
+	countTotal, _ := collection.EstimatedDocumentCount(ctx)
 
 	countFilter := int64(0)
 
 	if len(c.set.pipe) == 0 {
-		countFilter, _ = collection.CountDocuments(c.set.gom.Mongo.Context, c.set.filter)
+		countFilter, _ = collection.CountDocuments(ctx, c.set.filter)
 	} else {
 		f := bson.M{}
 		for _, e := range c.set.buildPipe() {
@@ -68,7 +71,7 @@ func (c *Command) Get() (int64, int64, error) {
 				break
 			}
 		}
-		countFilter, _ = collection.CountDocuments(c.set.gom.Mongo.Context, f)
+		countFilter, _ = collection.CountDocuments(ctx, f)
 	}
 
 	return countFilter, countTotal, nil
@@ -95,9 +98,12 @@ func (c *Command) GetOne() error {
 
 	client := c.set.gom.Mongo.Client
 
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
 
-	err := collection.FindOne(c.set.gom.Mongo.Context, c.set.filter).Decode(c.set.result)
+	err := collection.FindOne(ctx, c.set.filter).Decode(c.set.result)
 
 	if err != nil {
 		return errors.New(toolkit.Sprintf("Error finding document: %s", err.Error()))
@@ -118,7 +124,10 @@ func (c *Command) Insert(data interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	res, err := collection.InsertOne(c.set.gom.Mongo.Context, dataM)
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	res, err := collection.InsertOne(ctx, dataM)
 
 	if err != nil {
 		return nil, err
@@ -142,7 +151,10 @@ func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
 		return []interface{}{}, err
 	}
 
-	res, err := collection.InsertMany(c.set.gom.Mongo.Context, datas.([]interface{}))
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	res, err := collection.InsertMany(ctx, datas.([]interface{}))
 
 	if err != nil {
 		return []interface{}{}, err
@@ -170,7 +182,10 @@ func (c *Command) Update(data interface{}) error {
 		return errors.New("filter can't be empty")
 	}
 
-	res, err := collection.UpdateOne(c.set.gom.Mongo.Context, c.set.filter, bson.M{
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	res, err := collection.UpdateOne(ctx, c.set.filter, bson.M{
 		"$set": dataM,
 	})
 
@@ -197,7 +212,10 @@ func (c *Command) DeleteOne() error {
 		return errors.New("filter can't be empty")
 	}
 
-	res, err := collection.DeleteOne(c.set.gom.Mongo.Context, c.set.filter)
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	res, err := collection.DeleteOne(ctx, c.set.filter)
 
 	if err != nil {
 		return err
@@ -218,7 +236,10 @@ func (c *Command) DeleteAll() (int64, error) {
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
 
-	res, err := collection.DeleteMany(c.set.gom.Mongo.Context, c.set.filter)
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	res, err := collection.DeleteMany(ctx, c.set.filter)
 
 	if err != nil {
 		return 0, err
@@ -239,7 +260,10 @@ func (c *Command) Drop() error {
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
 
-	err := collection.Drop(c.set.gom.Mongo.Context)
+	ctx, cancelFunc := c.set.gom.GetContext()
+	defer cancelFunc()
+
+	err := collection.Drop(ctx)
 
 	if err != nil {
 		return err
