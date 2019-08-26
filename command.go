@@ -193,10 +193,6 @@ func (c *Command) Update(data interface{}) error {
 		return err
 	}
 
-	if res.MatchedCount == 0 {
-		return errors.New("Documents not found")
-	}
-
 	toolkit.Println("Documents updated:", res.MatchedCount)
 
 	return nil
@@ -221,10 +217,6 @@ func (c *Command) DeleteOne() error {
 		return err
 	}
 
-	if res.DeletedCount == 0 {
-		return errors.New("Documents not found")
-	}
-
 	toolkit.Println("Document deleted: ", res.DeletedCount)
 
 	return nil
@@ -245,11 +237,7 @@ func (c *Command) DeleteAll() (int64, error) {
 		return 0, err
 	}
 
-	if res.DeletedCount == 0 {
-		return 0, errors.New("Documents not found")
-	}
-
-	toolkit.Println("Document deleted: ", res.DeletedCount)
+	toolkit.Println("Documents deleted: ", res.DeletedCount)
 
 	return res.DeletedCount, nil
 }
