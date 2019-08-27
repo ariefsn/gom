@@ -230,7 +230,7 @@
 
   ```go
     res := []models.Hero{}
-    err := g.Set().Table("hero").Result(&res).Sort("RealName", sortBy).Cmd().Get()
+    err := g.Set().Table("hero").Result(&res).Sort("RealName", "asc").Cmd().Get()
     if err != nil {
       toolkit.Println(err.Error())
     }

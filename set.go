@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -250,34 +251,36 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 		json.Unmarshal(s, &mRaw)
 
 		validateJSONRaw := func(k string, v json.RawMessage, m bson.M) {
-			if k == "_id" {
-				var oid primitive.ObjectID
-				err := json.Unmarshal(v, &oid)
-				if err == nil {
-					m[k] = oid
-					return
-				}
-				m[k] = v
-			} else {
-				s := string(v)
-				i, err := strconv.ParseInt(s, 10, 64)
-				if err == nil {
-					m[k] = i
-					return
-				}
-				f, err := strconv.ParseFloat(s, 64)
-				if err == nil {
-					m[k] = f
-					return
-				}
-				var itf interface{}
-				err = json.Unmarshal(v, &itf)
-				if err == nil {
-					m[k] = itf
-					return
-				}
-				m[k] = v
+			s := string(v)
+			i, err := strconv.ParseInt(s, 10, 64)
+			if err == nil {
+				m[k] = i
+				return
 			}
+			f, err := strconv.ParseFloat(s, 64)
+			if err == nil {
+				m[k] = f
+				return
+			}
+			var t time.Time
+			err = json.Unmarshal(v, &t)
+			if err == nil {
+				m[k] = t
+				return
+			}
+			var oid primitive.ObjectID
+			err = json.Unmarshal(v, &oid)
+			if err == nil {
+				m[k] = oid
+				return
+			}
+			var itf interface{}
+			err = json.Unmarshal(v, &itf)
+			if err == nil {
+				m[k] = itf
+				return
+			}
+			m[k] = v
 		}
 
 		for k, v := range mRaw {
