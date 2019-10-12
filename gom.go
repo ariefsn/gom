@@ -3,7 +3,6 @@ package gom
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/eaciit/toolkit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,8 +27,8 @@ func (g *Gom) Init(config MongoConfig) {
 }
 
 // Set = Get set query with gom
-func (g *Gom) Set() *Set {
-	s := NewSet(g)
+func (g *Gom) Set(SetParams *SetParams) *Set {
+	s := NewSet(g, SetParams)
 
 	return s
 }
@@ -60,11 +59,4 @@ func (g *Gom) CheckClient() error {
 	toolkit.Println(toolkit.Sprintf("Connected to database: %s", g.Mongo.ConnectionString))
 
 	return nil
-}
-
-// GetContext = GetContext for command
-func (g *Gom) GetContext() (context.Context, context.CancelFunc) {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), g.Mongo.ContextTimeout*time.Second)
-
-	return ctx, cancelFunc
 }

@@ -1,6 +1,7 @@
 package gom
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,30 +17,44 @@ import (
 
 // Set = Set struct
 type Set struct {
-	tableName string
-	result    interface{}
-	gom       *Gom
-	filter    interface{}
-	pipe      []bson.M
-	sortField *string
-	sortBy    *int
-	skip      *int
-	limit     *int
-	command   *Command
+	tableName      string
+	result         interface{}
+	gom            *Gom
+	filter         interface{}
+	pipe           []bson.M
+	sortField      *string
+	sortBy         *int
+	skip           *int
+	limit          *int
+	command        *Command
+	contextTimeout time.Duration
 }
 
 // NewSet = init new set
-func NewSet(gom *Gom) *Set {
+func NewSet(gom *Gom, params *SetParams) *Set {
 	s := new(Set)
+	if params == nil {
+		s.filter = bson.M{}
+		s.pipe = nil
+		s.skip = nil
+		s.limit = nil
+		s.result = nil
+		s.tableName = ""
+		s.sortField = nil
+		s.sortBy = nil
+		s.contextTimeout = 30
+	} else {
+		s.Filter(params.Filter)
+		s.Pipe(params.Pipe)
+		s.Skip(params.Skip)
+		s.Limit(params.Limit)
+		s.Result(params.Result)
+		s.Table(params.TableName)
+		s.Sort(params.SortField, params.SortBy)
+		s.SetContext(params.Timeout)
+	}
+
 	s.gom = gom
-	s.filter = bson.M{}
-	s.pipe = nil
-	s.skip = nil
-	s.limit = nil
-	s.result = nil
-	s.tableName = ""
-	s.sortField = nil
-	s.sortBy = nil
 	s.command = NewCommand(s)
 
 	return s
@@ -330,4 +345,20 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 	}
 
 	return result, nil
+}
+
+// SetContext = SetContext for command
+func (s *Set) SetContext(seconds time.Duration) {
+	if &seconds == nil {
+		seconds = 30
+	}
+
+	s.contextTimeout = seconds
+}
+
+// GetContext = GetContext for command
+func (s *Set) GetContext() (context.Context, context.CancelFunc) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), s.contextTimeout*time.Second)
+
+	return ctx, cancelFunc
 }
