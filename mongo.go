@@ -4,23 +4,21 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Mongo = Mongo struct
-type Mongo struct {
-	Config           MongoConfig
+// mongoDB = MongoDB struct
+type mongoDB struct {
+	Config           Config
 	Client           *mongo.Client
-	ContextTimeout   time.Duration
 	Collection       *mongo.Collection
 	ConnectionString string
 }
 
-// MongoConfig = Mongo config struct
-type MongoConfig struct {
+// Config = Mongo config struct
+type Config struct {
 	Username string
 	Password string
 	Host     string
@@ -28,27 +26,18 @@ type MongoConfig struct {
 	Database string
 }
 
-// NewMongo = Init new mongo
-func NewMongo() *Mongo {
-	return new(Mongo)
-}
-
-// SetContextTimeout = Set context with seconds as param
-func (m *Mongo) SetContextTimeout(seconds time.Duration) {
-	if &seconds == nil {
-		seconds = 30
-	}
-
-	m.ContextTimeout = seconds
+// newMongo = Init new mongo
+func newMongo() *mongoDB {
+	return new(mongoDB)
 }
 
 // SetConfig = Set config of mongo
-func (m *Mongo) SetConfig(config MongoConfig) {
+func (m *mongoDB) SetConfig(config Config) {
 	m.Config = config
 }
 
 // SetClient = Set client
-func (m *Mongo) SetClient() {
+func (m *mongoDB) SetClient() {
 	config := m.Config
 
 	connectionString := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)

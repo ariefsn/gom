@@ -10,7 +10,7 @@ import (
 func main() {
 	g := gom.NewGom()
 
-	cfg := gom.MongoConfig{
+	cfg := gom.Config{
 		Host:     "localhost",
 		Port:     "27017",
 		Username: "",
@@ -26,36 +26,41 @@ func main() {
 		toolkit.Println(toolkit.Sprintf("Connection Error: %s", err.Error()))
 	}
 
-	if demo.GetAll(g) == 0 {
-		demo.InsertStruct(g)
-		demo.InsertMap(g)
-		demo.InsertAll(g)
-		demo.GetAll(g)
-		demo.UpdateStruct(g)
-		demo.GetAll(g)
-		demo.UpdateMap(g)
-		demo.GetAll(g)
-		demo.DeleteOne(g)
-		demo.GetAll(g)
+	d := demo.NewDemo()
+	// false => chaining set
+	// true => use SetParams
+	d.UseParams(true)
+
+	if d.GetAll(g) == 0 {
+		d.InsertStruct(g)
+		d.InsertMap(g)
+		d.InsertAll(g)
+		d.GetAll(g)
+		d.UpdateStruct(g)
+		d.GetAll(g)
+		d.UpdateMap(g)
+		d.GetAll(g)
+		d.DeleteOne(g)
+		d.GetAll(g)
 	}
-	demo.GetOne(g)
-	demo.FilterEq(g)
-	demo.FilterNe(g)
-	demo.FilterGt(g)
-	demo.FilterGte(g)
-	demo.FilterLt(g)
-	demo.FilterLte(g)
-	demo.FilterBetweenOrRange(g)
-	demo.FilterContains(g)
-	demo.FilterStartWith(g)
-	demo.FilterEndWith(g)
-	demo.FilterIn(g)
-	demo.FilterNin(g)
-	demo.GetByPipe(g)
-	demo.FilterAnd(g)
-	demo.FilterOr(g)
-	demo.Sort(g, "asc")
-	demo.Sort(g, "desc")
-	demo.DeleteAll(g)
-	demo.GetAll(g)
+	d.GetOne(g)
+	d.FilterEq(g)
+	d.FilterNe(g)
+	d.FilterGt(g)
+	d.FilterGte(g)
+	d.FilterLt(g)
+	d.FilterLte(g)
+	d.FilterBetweenOrRange(g)
+	d.FilterContains(g)
+	d.FilterStartWith(g)
+	d.FilterEndWith(g)
+	d.FilterIn(g)
+	d.FilterNin(g)
+	d.GetByPipe(g)
+	d.FilterAnd(g)
+	d.FilterOr(g)
+	d.Sort(g, "asc")
+	d.Sort(g, "desc")
+	d.DeleteAll(g)
+	d.GetAll(g)
 }

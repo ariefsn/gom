@@ -15,8 +15,8 @@ type Command struct {
 	set *Set
 }
 
-// NewCommand = create new command
-func NewCommand(s *Set) *Command {
+// newCommand = create new command
+func newCommand(s *Set) *Command {
 	c := new(Command)
 	c.set = s
 
@@ -37,12 +37,12 @@ func (c *Command) Get() (int64, int64, error) {
 		return 0, 0, errors.New("result argument must be a slice")
 	}
 
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
 	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(tableName)
 
 	var cur *mongo.Cursor
 	var err error
@@ -96,12 +96,12 @@ func (c *Command) GetOne() error {
 		return errors.New("result argument must be a pointer, not a slice")
 	}
 
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
 	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(tableName)
 
 	err := collection.FindOne(ctx, c.set.filter).Decode(c.set.result)
 
@@ -114,9 +114,9 @@ func (c *Command) GetOne() error {
 
 // Insert = insert one data, for multiple data use InsertAll
 func (c *Command) Insert(data interface{}) (interface{}, error) {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	dataM, err := c.set.buildData(data, true)
 
@@ -141,9 +141,9 @@ func (c *Command) Insert(data interface{}) (interface{}, error) {
 
 // InsertAll = insert multiple data
 func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	datas, err := c.set.buildData(data, true)
 
@@ -168,9 +168,9 @@ func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
 
 // Update = update data with filter or pipe
 func (c *Command) Update(data interface{}) error {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	dataM, err := c.set.buildData(data, false)
 
@@ -200,9 +200,9 @@ func (c *Command) Update(data interface{}) error {
 
 // DeleteOne = delete one data with filter or pipe
 func (c *Command) DeleteOne() error {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	if len(c.set.filter.(bson.M)) == 0 {
 		return errors.New("filter can't be empty")
@@ -224,9 +224,9 @@ func (c *Command) DeleteOne() error {
 
 // DeleteAll = delete all data with filter or pipe
 func (c *Command) DeleteAll() (int64, error) {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
@@ -244,9 +244,9 @@ func (c *Command) DeleteAll() (int64, error) {
 
 // Drop = drop table/collection
 func (c *Command) Drop() error {
-	client := c.set.gom.Mongo.Client
+	client := c.set.gom.GetClient()
 
-	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
+	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()

@@ -18,3 +18,11 @@ type SetParams struct {
 	Limit     int
 	Timeout   time.Duration
 }
+
+// NewSetParams = Init set params
+func (g *Gom) NewSetParams() *SetParams {
+	sp := new(SetParams)
+	sp.Timeout = 30
+
+	return sp
+}

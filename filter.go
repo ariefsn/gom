@@ -52,8 +52,8 @@ type Filter struct {
 	Value interface{}
 }
 
-// NewFilter create new filter with given parameter
-func NewFilter(field string, op FilterOp, v interface{}, items []*Filter) *Filter {
+// newFilter create new filter with given parameter
+func newFilter(field string, op FilterOp, v interface{}, items []*Filter) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = op
@@ -66,12 +66,12 @@ func NewFilter(field string, op FilterOp, v interface{}, items []*Filter) *Filte
 
 // And create new filter with And operation
 func And(items ...*Filter) *Filter {
-	return NewFilter("", OpAnd, nil, items)
+	return newFilter("", OpAnd, nil, items)
 }
 
 // Or create new filter with Or operation
 func Or(items ...*Filter) *Filter {
-	return NewFilter("", OpOr, nil, items)
+	return newFilter("", OpOr, nil, items)
 }
 
 // Sort create new filter with Sort operation
@@ -82,54 +82,54 @@ func Sort(field string, sortType string) *Filter {
 		sort = 1
 	}
 
-	return NewFilter(field, OpSort, sort, nil)
+	return newFilter(field, OpSort, sort, nil)
 }
 
 // Eq create new filter with Eq operation
 func Eq(field string, v interface{}) *Filter {
-	return NewFilter(field, OpEq, v, nil)
+	return newFilter(field, OpEq, v, nil)
 }
 
 // Not create new filter with Eq operation
 func Not(item *Filter) *Filter {
-	return NewFilter("", OpNot, nil, []*Filter{item})
+	return newFilter("", OpNot, nil, []*Filter{item})
 }
 
 // Ne create new filter with Ne operation
 func Ne(field string, v interface{}) *Filter {
-	return NewFilter(field, OpNe, v, nil)
+	return newFilter(field, OpNe, v, nil)
 }
 
 // Gte create new filter with Gte operation
 func Gte(field string, v interface{}) *Filter {
-	return NewFilter(field, OpGte, v, nil)
+	return newFilter(field, OpGte, v, nil)
 }
 
 // Gt create new filter with Gt operation
 func Gt(field string, v interface{}) *Filter {
-	return NewFilter(field, OpGt, v, nil)
+	return newFilter(field, OpGt, v, nil)
 }
 
 // Lt create new filter with Lt operation
 func Lt(field string, v interface{}) *Filter {
-	return NewFilter(field, OpLt, v, nil)
+	return newFilter(field, OpLt, v, nil)
 }
 
 // Lte create new filter with Lte operation
 func Lte(field string, v interface{}) *Filter {
-	return NewFilter(field, OpLte, v, nil)
+	return newFilter(field, OpLte, v, nil)
 }
 
 // Range create new filter with Range operation
 func Range(field string, from, to interface{}) *Filter {
-	f := NewFilter(field, OpRange, nil, nil)
+	f := newFilter(field, OpRange, nil, nil)
 	f.Value = []interface{}{from, to}
 	return f
 }
 
 // Between create new filter with Between operation (Custom)
 func Between(field string, gt, lt interface{}) *Filter {
-	f := NewFilter(field, OpBetween, nil, nil)
+	f := newFilter(field, OpBetween, nil, nil)
 	f.Value = []interface{}{gt, lt}
 	return f
 }

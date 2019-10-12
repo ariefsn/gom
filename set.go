@@ -30,8 +30,8 @@ type Set struct {
 	contextTimeout time.Duration
 }
 
-// NewSet = init new set
-func NewSet(gom *Gom, params *SetParams) *Set {
+// newSet = init new set
+func newSet(gom *Gom, params *SetParams) *Set {
 	s := new(Set)
 	if params == nil {
 		s.filter = bson.M{}
@@ -44,18 +44,44 @@ func NewSet(gom *Gom, params *SetParams) *Set {
 		s.sortBy = nil
 		s.contextTimeout = 30
 	} else {
-		s.Filter(params.Filter)
-		s.Pipe(params.Pipe)
-		s.Skip(params.Skip)
-		s.Limit(params.Limit)
-		s.Result(params.Result)
-		s.Table(params.TableName)
-		s.Sort(params.SortField, params.SortBy)
-		s.SetContext(params.Timeout)
+		s.filter = bson.M{}
+		if params.Filter != nil {
+			s.Filter(params.Filter)
+		}
+
+		if params.Pipe != nil {
+			s.Pipe(params.Pipe)
+		}
+
+		if params.Skip != 0 {
+			s.Skip(params.Skip)
+		}
+
+		if params.Limit != 0 {
+			s.Limit(params.Limit)
+		}
+
+		if params.Result != nil {
+			s.Result(params.Result)
+		}
+
+		if params.TableName != "" {
+			s.Table(params.TableName)
+		}
+
+		if params.SortField != "" {
+			s.Sort(params.SortField, params.SortBy)
+		}
+
+		if params.Timeout == 0 {
+			s.Timeout(30)
+		} else {
+			s.Timeout(params.Timeout)
+		}
 	}
 
 	s.gom = gom
-	s.command = NewCommand(s)
+	s.command = newCommand(s)
 
 	return s
 }
@@ -198,6 +224,8 @@ func (s *Set) Filter(filter *Filter) *Set {
 		}
 
 		s.filter = main
+	} else {
+		s.filter = bson.M{}
 	}
 
 	return s
@@ -347,13 +375,15 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 	return result, nil
 }
 
-// SetContext = SetContext for command
-func (s *Set) SetContext(seconds time.Duration) {
+// Timeout = Timeout for command
+func (s *Set) Timeout(seconds time.Duration) *Set {
 	if &seconds == nil {
 		seconds = 30
 	}
 
 	s.contextTimeout = seconds
+
+	return s
 }
 
 // GetContext = GetContext for command
