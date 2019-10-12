@@ -39,7 +39,7 @@ func (c *Command) Get() (int64, int64, error) {
 
 	client := c.set.gom.Mongo.Client
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
@@ -98,7 +98,7 @@ func (c *Command) GetOne() error {
 
 	client := c.set.gom.Mongo.Client
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(tableName)
@@ -124,7 +124,7 @@ func (c *Command) Insert(data interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	res, err := collection.InsertOne(ctx, dataM)
@@ -151,7 +151,7 @@ func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
 		return []interface{}{}, err
 	}
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	res, err := collection.InsertMany(ctx, datas.([]interface{}))
@@ -182,7 +182,7 @@ func (c *Command) Update(data interface{}) error {
 		return errors.New("filter can't be empty")
 	}
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	res, err := collection.UpdateOne(ctx, c.set.filter, bson.M{
@@ -208,7 +208,7 @@ func (c *Command) DeleteOne() error {
 		return errors.New("filter can't be empty")
 	}
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	res, err := collection.DeleteOne(ctx, c.set.filter)
@@ -228,7 +228,7 @@ func (c *Command) DeleteAll() (int64, error) {
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	res, err := collection.DeleteMany(ctx, c.set.filter)
@@ -248,7 +248,7 @@ func (c *Command) Drop() error {
 
 	collection := client.Database(c.set.gom.Mongo.Config.Database).Collection(c.set.tableName)
 
-	ctx, cancelFunc := c.set.gom.GetContext()
+	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
 	err := collection.Drop(ctx)

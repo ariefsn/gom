@@ -9,11 +9,37 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+var version = "v1"
+
+type Demo struct {
+	useParams bool
+}
+
+func NewDemo() *Demo {
+	d := new(Demo)
+	d.useParams = false
+
+	return d
+}
+
+// SetVersion = set version of gom
+func (d *Demo) SetVersion(useParams bool) {
+	d.useParams = useParams
+}
+
 // InsertStruct = example insert struct data
-func InsertStruct(g *gom.Gom) {
+func (d *Demo) InsertStruct(g *gom.Gom) {
 	toolkit.Println("===== Insert Struct =====")
 	hero := models.NewHero("Wolverine", "Hugh Jackman", 40)
-	_, err := g.Set().Table("hero").Cmd().Insert(hero)
+	var err error
+	if d.useParams {
+		_, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+		}).Cmd().Insert(hero)
+	} else {
+		_, err = g.Set(nil).Table("hero").Cmd().Insert(hero)
+	}
+
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -21,14 +47,21 @@ func InsertStruct(g *gom.Gom) {
 }
 
 // InsertMap = example insert struct map data
-func InsertMap(g *gom.Gom) {
+func (d *Demo) InsertMap(g *gom.Gom) {
 	toolkit.Println("===== Insert Map =====")
 	hero := bson.M{
 		"Name":     "Black Widow",
 		"RealName": "Scarlett Johansson",
 		"Age":      32,
 	}
-	_, err := g.Set().Table("hero").Cmd().Insert(&hero)
+	var err error
+	if d.useParams {
+		_, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+		}).Cmd().Insert(&hero)
+	} else {
+		_, err = g.Set(nil).Table("hero").Cmd().Insert(&hero)
+	}
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -36,10 +69,10 @@ func InsertMap(g *gom.Gom) {
 }
 
 // InsertAll = example insert multiple data
-func InsertAll(g *gom.Gom) {
+func (d *Demo) InsertAll(g *gom.Gom) {
 	toolkit.Println("===== Insert All =====")
 	heroes := models.DummyData()
-	_, err := g.Set().Table("hero").Cmd().InsertAll(&heroes)
+	_, err := g.Set(nil).Table("hero").Cmd().InsertAll(&heroes)
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -47,10 +80,10 @@ func InsertAll(g *gom.Gom) {
 }
 
 // UpdateStruct = example update with struct
-func UpdateStruct(g *gom.Gom) {
+func (d *Demo) UpdateStruct(g *gom.Gom) {
 	toolkit.Println("===== Update With Struct =====")
 	hero := models.NewHero("Wonderwoman", "Gal Gadot", 34)
-	err := g.Set().Table("hero").Filter(gom.Eq("RealName", "Scarlett Johansson")).Cmd().Update(hero)
+	err := g.Set(nil).Table("hero").Filter(gom.Eq("RealName", "Scarlett Johansson")).Cmd().Update(hero)
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -58,14 +91,14 @@ func UpdateStruct(g *gom.Gom) {
 }
 
 // UpdateMap = example update with map
-func UpdateMap(g *gom.Gom) {
+func (d *Demo) UpdateMap(g *gom.Gom) {
 	toolkit.Println("===== Update With Map =====")
 	hero := bson.M{
 		"Name":     "Hawkeye",
 		"RealName": "Jeremy Renner",
 		"Age":      33,
 	}
-	err := g.Set().Table("hero").Filter(gom.Eq("Name", "Wolverine")).Cmd().Update(&hero)
+	err := g.Set(nil).Table("hero").Filter(gom.Eq("Name", "Wolverine")).Cmd().Update(&hero)
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -73,9 +106,9 @@ func UpdateMap(g *gom.Gom) {
 }
 
 // DeleteOne = example delete one data
-func DeleteOne(g *gom.Gom) {
+func (d *Demo) DeleteOne(g *gom.Gom) {
 	toolkit.Println("===== Delete One =====")
-	err := g.Set().Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
+	err := g.Set(nil).Table("hero").Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -83,9 +116,9 @@ func DeleteOne(g *gom.Gom) {
 }
 
 // DeleteAll = example delete all
-func DeleteAll(g *gom.Gom) {
+func (d *Demo) DeleteAll(g *gom.Gom) {
 	toolkit.Println("===== Delete All =====")
-	_, err := g.Set().Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
+	_, err := g.Set(nil).Table("hero").Filter(gom.EndWith("Name", "man")).Cmd().DeleteAll()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -93,10 +126,10 @@ func DeleteAll(g *gom.Gom) {
 }
 
 // GetAll = example get all data without filter or pipe
-func GetAll(g *gom.Gom) int64 {
+func (d *Demo) GetAll(g *gom.Gom) int64 {
 	toolkit.Println("===== Get All =====")
 	res := []models.Hero{}
-	cFilter, cTotal, err := g.Set().Table("hero").Result(&res).Cmd().Get()
+	cFilter, cTotal, err := g.Set(nil).Table("hero").Result(&res).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return 0
@@ -109,10 +142,10 @@ func GetAll(g *gom.Gom) int64 {
 }
 
 // GetOne = example get one data without filter or pipe
-func GetOne(g *gom.Gom) {
+func (d *Demo) GetOne(g *gom.Gom) {
 	toolkit.Println("===== Get One =====")
 	res := models.Hero{}
-	err := g.Set().Table("hero").Result(&res).Cmd().GetOne()
+	err := g.Set(nil).Table("hero").Result(&res).Cmd().GetOne()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -121,10 +154,10 @@ func GetOne(g *gom.Gom) {
 }
 
 // Sort = example get all data with sort command
-func Sort(g *gom.Gom, sortBy string) {
+func (d *Demo) Sort(g *gom.Gom, sortBy string) {
 	toolkit.Println(toolkit.Sprintf("===== Sort %s =====", strings.ToUpper(sortBy)))
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Sort("RealName", sortBy).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Sort("RealName", sortBy).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 	}
@@ -134,10 +167,10 @@ func Sort(g *gom.Gom, sortBy string) {
 }
 
 // FilterEq = example get data with filter equal
-func FilterEq(g *gom.Gom) {
+func (d *Demo) FilterEq(g *gom.Gom) {
 	toolkit.Println("===== Equal =====")
 	res := models.Hero{}
-	err := g.Set().Table("hero").Result(&res).Filter(gom.Eq("Name", "Green Arrow")).Cmd().GetOne()
+	err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Eq("Name", "Green Arrow")).Cmd().GetOne()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -146,10 +179,10 @@ func FilterEq(g *gom.Gom) {
 }
 
 // FilterNe = example get data with filter not equal
-func FilterNe(g *gom.Gom) {
+func (d *Demo) FilterNe(g *gom.Gom) {
 	toolkit.Println("===== Not Equal =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Ne("Name", "Ironman")).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Ne("Name", "Ironman")).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -160,10 +193,10 @@ func FilterNe(g *gom.Gom) {
 }
 
 // FilterGt = example get data with filter greater than
-func FilterGt(g *gom.Gom) {
+func (d *Demo) FilterGt(g *gom.Gom) {
 	toolkit.Println("===== Greater Than =====")
 	res := []models.Hero{}
-	cFilter, cTotal, err := g.Set().Table("hero").Result(&res).Filter(gom.Gt("Age", 35)).Cmd().Get()
+	cFilter, cTotal, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Gt("Age", 35)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -175,10 +208,10 @@ func FilterGt(g *gom.Gom) {
 }
 
 // FilterGte = example get data with filter greater than equal
-func FilterGte(g *gom.Gom) {
+func (d *Demo) FilterGte(g *gom.Gom) {
 	toolkit.Println("===== Greater Than Equal =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Gte("Age", 43)).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Gte("Age", 43)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -189,10 +222,10 @@ func FilterGte(g *gom.Gom) {
 }
 
 // FilterLt = example get data with filter less than
-func FilterLt(g *gom.Gom) {
+func (d *Demo) FilterLt(g *gom.Gom) {
 	toolkit.Println("===== Less Than =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Lt("Age", 35)).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Lt("Age", 35)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -203,10 +236,10 @@ func FilterLt(g *gom.Gom) {
 }
 
 // FilterLte = example get data with filter less than equal
-func FilterLte(g *gom.Gom) {
+func (d *Demo) FilterLte(g *gom.Gom) {
 	toolkit.Println("===== Less Than Equal =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Lte("Age", 27)).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Lte("Age", 27)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -217,10 +250,10 @@ func FilterLte(g *gom.Gom) {
 }
 
 // FilterBetweenOrRange = example get data with filter between or range as alternative
-func FilterBetweenOrRange(g *gom.Gom) {
+func (d *Demo) FilterBetweenOrRange(g *gom.Gom) {
 	toolkit.Println("===== Between =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Between("Age", 27, 38)).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Between("Age", 27, 38)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -231,10 +264,10 @@ func FilterBetweenOrRange(g *gom.Gom) {
 }
 
 // FilterContains = example get data with filter contains
-func FilterContains(g *gom.Gom) {
+func (d *Demo) FilterContains(g *gom.Gom) {
 	toolkit.Println("===== Contains =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Contains("Name", "der")).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Contains("Name", "der")).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -245,10 +278,10 @@ func FilterContains(g *gom.Gom) {
 }
 
 // FilterStartWith = example get data with filter startWith
-func FilterStartWith(g *gom.Gom) {
+func (d *Demo) FilterStartWith(g *gom.Gom) {
 	toolkit.Println("===== Start With =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.StartWith("Name", "S")).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.StartWith("Name", "S")).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -259,10 +292,10 @@ func FilterStartWith(g *gom.Gom) {
 }
 
 // FilterEndWith = example get data with filter endWith
-func FilterEndWith(g *gom.Gom) {
+func (d *Demo) FilterEndWith(g *gom.Gom) {
 	toolkit.Println("===== End With =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.EndWith("Name", "man")).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.EndWith("Name", "man")).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -273,10 +306,10 @@ func FilterEndWith(g *gom.Gom) {
 }
 
 // FilterIn = example get data with filter in
-func FilterIn(g *gom.Gom) {
+func (d *Demo) FilterIn(g *gom.Gom) {
 	toolkit.Println("===== In =====")
 	res := []models.Hero{}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.In("Name", "Green Arrow", "Red Arrow")).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.In("Name", "Green Arrow", "Red Arrow")).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -287,11 +320,11 @@ func FilterIn(g *gom.Gom) {
 }
 
 // FilterNin = example get data with filter not in
-func FilterNin(g *gom.Gom) {
+func (d *Demo) FilterNin(g *gom.Gom) {
 	toolkit.Println("===== Not In =====")
 	res := []models.Hero{}
 	names := []interface{}{"Green Arrow", "Red Arrow"}
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(gom.Nin("Name", names...)).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(gom.Nin("Name", names...)).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -302,7 +335,7 @@ func FilterNin(g *gom.Gom) {
 }
 
 // GetByPipe = example get all data pipe
-func GetByPipe(g *gom.Gom) {
+func (d *Demo) GetByPipe(g *gom.Gom) {
 	toolkit.Println("===== Get By Pipe =====")
 	res := []models.Hero{}
 	pipe := []bson.M{
@@ -319,7 +352,7 @@ func GetByPipe(g *gom.Gom) {
 			},
 		},
 	}
-	cFilter, cTotal, err := g.Set().Table("hero").Result(&res).Pipe(pipe).Cmd().Get()
+	cFilter, cTotal, err := g.Set(nil).Table("hero").Result(&res).Pipe(pipe).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -331,11 +364,11 @@ func GetByPipe(g *gom.Gom) {
 }
 
 // FilterAnd = example get data with filter and
-func FilterAnd(g *gom.Gom) {
+func (d *Demo) FilterAnd(g *gom.Gom) {
 	toolkit.Println("===== And =====")
 	res := []models.Hero{}
 	filter := gom.And(gom.Eq("Age", 45), gom.StartWith("Name", "A"))
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(filter).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(filter).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
@@ -346,11 +379,11 @@ func FilterAnd(g *gom.Gom) {
 }
 
 // FilterOr = example get data with filter or
-func FilterOr(g *gom.Gom) {
+func (d *Demo) FilterOr(g *gom.Gom) {
 	toolkit.Println("===== Or =====")
 	res := []models.Hero{}
 	filter := gom.Or(gom.Eq("Age", 45), gom.StartWith("Name", "A"))
-	_, _, err := g.Set().Table("hero").Result(&res).Filter(filter).Cmd().Get()
+	_, _, err := g.Set(nil).Table("hero").Result(&res).Filter(filter).Cmd().Get()
 	if err != nil {
 		toolkit.Println(err.Error())
 		return
