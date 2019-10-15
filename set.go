@@ -162,7 +162,7 @@ func (s *Set) Filter(filter *Filter) *Set {
 
 			main[string(filter.Op)] = insideArr
 
-		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort:
+		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort, OpExists:
 			inside[string(filter.Op)] = filter.Value
 			main[filter.Field] = inside
 

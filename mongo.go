@@ -9,6 +9,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	// ScramSha1 is SCRAM-SHA-1 (legacy)
+	ScramSha1 = "SCRAM-SHA-1"
+	// ScramSha256 is SCRAM-SHA-256
+	ScramSha256 = "SCRAM-SHA-256"
+	// MongoDbCr is MONGODB-CR
+	MongoDbCr = "MONGODB-CR"
+	// Plain is PLAIN
+	Plain = "PLAIN"
+	// GssAPI is GSSAPI
+	GssAPI = "GSSAPI"
+	// MongoDbX509 is MONGODB-X509
+	MongoDbX509 = "MONGODB-X509"
+)
+
 // mongoDB = MongoDB struct
 type mongoDB struct {
 	Config           Config
@@ -19,11 +34,13 @@ type mongoDB struct {
 
 // Config = Mongo config struct
 type Config struct {
-	Username string
-	Password string
-	Host     string
-	Port     string
-	Database string
+	Username      string
+	Password      string
+	Host          string
+	Port          string
+	Database      string
+	MaxPool       int
+	AuthMechanism string
 }
 
 // newMongo = Init new mongo
@@ -44,9 +61,16 @@ func (m *mongoDB) SetClient() {
 
 	if config.Username != "" {
 		connectionString = fmt.Sprintf("mongodb://%s:%s@%s:%s", config.Username, config.Password, config.Host, config.Port)
+		if config.AuthMechanism != "" {
+			connectionString = fmt.Sprintf("mongodb+srv://%s:%s@%s/%s?authMechanism=%s", config.Username, config.Password, config.Host, config.Database, config.AuthMechanism)
+		}
 	}
 
 	clientOptions := options.Client().ApplyURI(connectionString)
+
+	if config.MaxPool > 0 {
+		clientOptions.SetMaxPoolSize(uint64(config.MaxPool))
+	}
 
 	client, err := mongo.NewClient(clientOptions)
 

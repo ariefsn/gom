@@ -49,6 +49,8 @@
     }
   ```
 
+  > If use auth mechanism set it inside `gom.Config` with one value of gom auth mechanism like `gom.ScramSha1` or `gom.ScramSha256`.
+
 - Initialize
 
   ```go
@@ -133,6 +135,10 @@
     // gom.Or(<Filters...>)
     gom.Or(gom.Eq("Age", 45), gom.StartWith("Name", "A"))
 
+    // Exists
+    // gom.Exists(<Field>, <Exists>)
+    gom.Exists("RealName", true)
+
   ```
 
 - Gom Command
@@ -198,7 +204,7 @@
       err = g.Set(&gom.SetParams{
         TableName: "hero",
         Result:    &res,
-      Timeout:   10,
+        Timeout:   10,
       }).Cmd().GetOne()
 
       if err != nil {
@@ -219,9 +225,9 @@
       _, err := g.Set(nil).Table("hero").Timeout(10).Cmd().Insert(hero)
 
       // Use Set Params
-    _, err = g.Set(&gom.SetParams{
-      TableName: "hero",
-      Timeout:   10,
+      _, err = g.Set(&gom.SetParams{
+        TableName: "hero",
+        Timeout:   10,
       }).Cmd().Insert(hero)
 
       if err != nil {
