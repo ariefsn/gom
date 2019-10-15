@@ -24,6 +24,7 @@ func main() {
 
 	if err != nil {
 		toolkit.Println(toolkit.Sprintf("Connection Error: %s", err.Error()))
+		return
 	}
 
 	d := demo.NewDemo()
@@ -56,6 +57,7 @@ func main() {
 	d.FilterEndWith(g)
 	d.FilterIn(g)
 	d.FilterNin(g)
+	d.FilterExists(g)
 	d.GetByPipe(g)
 	d.FilterAnd(g)
 	d.FilterOr(g)
