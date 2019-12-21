@@ -592,6 +592,33 @@ func (d *Demo) FilterNin(g *gom.Gom) {
 	}
 }
 
+// FilterExists = example get data with filter exists
+func (d *Demo) FilterExists(g *gom.Gom) {
+	toolkit.Println("===== Exists =====")
+	res := []models.Hero{}
+
+	var err error
+	if d.useParams {
+		_, _, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+			Result:    &res,
+			Filter:    gom.Exists("ealName", true),
+			Timeout:   10,
+		}).Cmd().Get()
+	} else {
+		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Exists("RealName", true)).Cmd().Get()
+	}
+
+	if err != nil {
+		toolkit.Println(err.Error())
+		return
+	}
+
+	for _, h := range res {
+		toolkit.Println(h)
+	}
+}
+
 // GetByPipe = example get all data pipe
 func (d *Demo) GetByPipe(g *gom.Gom) {
 	toolkit.Println("===== Get By Pipe =====")

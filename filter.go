@@ -42,6 +42,8 @@ const (
 	OpSort = "$sort"
 	// OpBetween is Between (Custom)
 	OpBetween = "between"
+	// OpExists is Exists
+	OpExists = "$exists"
 )
 
 // Filter holding Items, Field, Operation, and Value
@@ -90,7 +92,7 @@ func Eq(field string, v interface{}) *Filter {
 	return newFilter(field, OpEq, v, nil)
 }
 
-// Not create new filter with Eq operation
+// Not create new filter with Not operation
 func Not(item *Filter) *Filter {
 	return newFilter("", OpNot, nil, []*Filter{item})
 }
@@ -175,6 +177,15 @@ func EndWith(field string, values string) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpEndWith
+	f.Value = values
+	return f
+}
+
+// Exists match the documents that contain the field
+func Exists(field string, values bool) *Filter {
+	f := new(Filter)
+	f.Field = field
+	f.Op = OpExists
 	f.Value = values
 	return f
 }
