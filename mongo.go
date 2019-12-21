@@ -22,7 +22,7 @@ type Config struct {
 	Username string
 	Password string
 	Host     string
-	Port     string
+	Port     int
 	Database string
 }
 
@@ -40,10 +40,10 @@ func (m *mongoDB) SetConfig(config Config) {
 func (m *mongoDB) SetClient() {
 	config := m.Config
 
-	connectionString := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
+	connectionString := fmt.Sprintf("mongodb://%s:%v", config.Host, config.Port)
 
 	if config.Username != "" {
-		connectionString = fmt.Sprintf("mongodb://%s:%s@%s:%s", config.Username, config.Password, config.Host, config.Port)
+		connectionString = fmt.Sprintf("mongodb://%s:%s@%s:%v", config.Username, config.Password, config.Host, config.Port)
 	}
 
 	clientOptions := options.Client().ApplyURI(connectionString)
