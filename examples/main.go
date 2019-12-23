@@ -12,7 +12,7 @@ func main() {
 
 	cfg := gom.Config{
 		Host:     "localhost",
-		Port:     "27017",
+		Port:     27017,
 		Username: "",
 		Password: "",
 		Database: "test",
