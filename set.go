@@ -285,6 +285,14 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 		return nil, errors.New("data argument must be pointer")
 	}
 
+	getValidID := func(key string) string {
+		if key == "ID" || key == "_id" || key == "id" {
+			return "_id"
+		}
+
+		return key
+	}
+
 	switch rv.Elem().Kind() {
 	case reflect.Struct:
 		s, _ := json.Marshal(rv.Interface())
@@ -295,35 +303,36 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 
 		validateJSONRaw := func(k string, v json.RawMessage, m bson.M) {
 			s := string(v)
+
 			i, err := strconv.ParseInt(s, 10, 64)
 			if err == nil {
-				m[k] = i
+				m[getValidID(k)] = i
 				return
 			}
 			f, err := strconv.ParseFloat(s, 64)
 			if err == nil {
-				m[k] = f
+				m[getValidID(k)] = f
 				return
 			}
 			var t time.Time
 			err = json.Unmarshal(v, &t)
 			if err == nil {
-				m[k] = t
+				m[getValidID(k)] = t
 				return
 			}
 			var oid primitive.ObjectID
 			err = json.Unmarshal(v, &oid)
 			if err == nil {
-				m[k] = oid
+				m[getValidID(k)] = oid
 				return
 			}
 			var itf interface{}
 			err = json.Unmarshal(v, &itf)
 			if err == nil {
-				m[k] = itf
+				m[getValidID(k)] = itf
 				return
 			}
-			m[k] = v
+			m[getValidID(k)] = v
 		}
 
 		for k, v := range mRaw {
@@ -343,10 +352,10 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 		for _, key := range v.MapKeys() {
 			value := v.MapIndex(key)
 			if includeID {
-				dataM[key.String()] = value.Interface()
+				dataM[getValidID(key.String())] = value.Interface()
 			} else {
 				if key.String() != "_id" {
-					dataM[key.String()] = value.Interface()
+					dataM[getValidID(key.String())] = value.Interface()
 				}
 			}
 		}
