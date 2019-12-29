@@ -107,6 +107,14 @@
     // gom.Between(<Field>, <From Value>, <To Value>)
     gom.Between("Age", 20, 28)
 
+    // Range Equal
+    // gom.RangeEq(<Field>, <From Value>, <To Value>)
+    gom.Range("Age", 20, 28)
+
+    // Between Equal
+    // gom.BetweenEq(<Field>, <From Value>, <To Value>)
+    gom.Between("Age", 20, 28)
+
     // In
     // gom.In(<Field>, <Values...>)
     gom.In("Name", "Green Arrow", "Red Arrow")

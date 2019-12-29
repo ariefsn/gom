@@ -44,6 +44,10 @@ const (
 	OpBetween = "between"
 	// OpExists is Exists
 	OpExists = "$exists"
+	// OpBetweenEq is Between Equal
+	OpBetweenEq = "betweenEq"
+	// OpRangeEq is Range Equal
+	OpRangeEq = "rangeEq"
 )
 
 // Filter holding Items, Field, Operation, and Value
@@ -133,6 +137,20 @@ func Range(field string, from, to interface{}) *Filter {
 func Between(field string, gt, lt interface{}) *Filter {
 	f := newFilter(field, OpBetween, nil, nil)
 	f.Value = []interface{}{gt, lt}
+	return f
+}
+
+// RangeEq create new filter with Range Equal operation
+func RangeEq(field string, from, to interface{}) *Filter {
+	f := newFilter(field, OpRangeEq, nil, nil)
+	f.Value = []interface{}{from, to}
+	return f
+}
+
+// BetweenEq create new filter with Between Equal operation (Custom)
+func BetweenEq(field string, gte, lte interface{}) *Filter {
+	f := newFilter(field, OpBetweenEq, nil, nil)
+	f.Value = []interface{}{gte, lte}
 	return f
 }
 

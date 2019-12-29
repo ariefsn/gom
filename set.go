@@ -171,17 +171,63 @@ func (s *Set) Filter(filter *Filter) *Set {
 		// 	main.Set(filter.Field, inside)
 
 		case OpBetween, OpRange:
-			gt := 0
-			lt := 0
+			switch filter.Value.([]interface{})[0].(type) {
+			case int:
+				gt := 0
+				lt := 0
 
-			if filter.Value != nil {
-				gt = filter.Value.([]interface{})[0].(int)
-				lt = filter.Value.([]interface{})[1].(int)
+				if filter.Value != nil {
+					gt = filter.Value.([]interface{})[0].(int)
+					lt = filter.Value.([]interface{})[1].(int)
+				}
+
+				main[filter.Field] = bson.M{
+					"$gt": gt,
+					"$lt": lt,
+				}
+			case time.Time:
+				gt := time.Now()
+				lt := time.Now()
+
+				if filter.Value != nil {
+					gt = filter.Value.([]interface{})[0].(time.Time)
+					lt = filter.Value.([]interface{})[1].(time.Time)
+				}
+
+				main[filter.Field] = bson.M{
+					"$gt": gt,
+					"$lt": lt,
+				}
 			}
 
-			main[filter.Field] = bson.M{
-				"$gt": gt,
-				"$lt": lt,
+		case OpBetweenEq, OpRangeEq:
+			switch filter.Value.([]interface{})[0].(type) {
+			case int:
+				gt := 0
+				lt := 0
+
+				if filter.Value != nil {
+					gt = filter.Value.([]interface{})[0].(int)
+					lt = filter.Value.([]interface{})[1].(int)
+				}
+
+				main[filter.Field] = bson.M{
+					"$gte": gt,
+					"$lte": lt,
+				}
+			case time.Time:
+				gt := time.Now()
+				lt := time.Now()
+
+				if filter.Value != nil {
+					gt = filter.Value.([]interface{})[0].(time.Time)
+					lt = filter.Value.([]interface{})[1].(time.Time)
+				}
+
+				main[filter.Field] = bson.M{
+					"$gte": gt,
+					"$lte": lt,
+				}
 			}
 
 		case OpStartWith:
@@ -320,11 +366,14 @@ func (s *Set) buildData(data interface{}, includeID bool) (interface{}, error) {
 				m[getValidID(k)] = t
 				return
 			}
-			var oid primitive.ObjectID
-			err = json.Unmarshal(v, &oid)
-			if err == nil {
-				m[getValidID(k)] = oid
-				return
+			// 26 => includes double quotes
+			if len(s) == 26 {
+				var oid primitive.ObjectID
+				err = json.Unmarshal(v, &oid)
+				if err == nil {
+					m[getValidID(k)] = oid
+					return
+				}
 			}
 			var itf interface{}
 			err = json.Unmarshal(v, &itf)
