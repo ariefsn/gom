@@ -148,7 +148,7 @@ func (s *Set) Sort(field, sortBy string) *Set {
 func (s *Set) Filter(filter *Filter) *Set {
 
 	if filter != nil {
-		main := s.gom.BuildFilter(filter)
+		main := BuildFilter(filter)
 		s.filter = main
 	} else {
 		s.filter = bson.M{}
