@@ -2,12 +2,6 @@ package gom
 
 import "go.mongodb.org/mongo-driver/bson"
 
-// PipeSortParams = params model for pipe sort multiple
-type PipeSortParams struct {
-	Field     string
-	Ascending bool
-}
-
 // PipeUnwind = create pipe for unwind arrays. To spesify, prefix the field with dollar sign ($)
 func PipeUnwind(path string, showEmptyArrays bool) bson.M {
 	m := bson.M{
@@ -103,6 +97,27 @@ func PipeSortMultiple(sortParams ...PipeSortParams) bson.M {
 func PipeProject(project bson.M) bson.M {
 	m := bson.M{
 		"$project": project,
+	}
+
+	return m
+}
+
+// PipeSwitch = create pipe for switch condition.
+func PipeSwitch(switchCase PipeSwitchParams) bson.M {
+	branches := []bson.M{}
+
+	for _, c := range switchCase.Cases {
+		branches = append(branches, bson.M{
+			"case": BuildFilter(c.Case),
+			"then": c.Then,
+		})
+	}
+
+	m := bson.M{
+		"$switch": bson.M{
+			"default":  switchCase.Default,
+			"branches": branches,
+		},
 	}
 
 	return m

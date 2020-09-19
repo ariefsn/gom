@@ -77,7 +77,7 @@ func (c *Command) Get() (int64, int64, error) {
 	return countFilter, countTotal, nil
 }
 
-// GetOne = get one data. it'll use Filter as default, pipe ignored.
+// GetOne = get one data. it'll use Filter.
 func (c *Command) GetOne() error {
 	tableName := c.set.tableName
 	result := c.set.result
