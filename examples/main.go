@@ -65,4 +65,6 @@ func main() {
 	d.Sort(g, "desc")
 	d.DeleteAll(g)
 	d.GetAll(g)
+
+	toolkit.Println(gom.BuildAggregate(gom.Eq("asa", 20)))
 }

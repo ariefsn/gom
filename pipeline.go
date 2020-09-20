@@ -108,7 +108,7 @@ func PipeSwitch(switchCase PipeSwitchParams) bson.M {
 
 	for _, c := range switchCase.Cases {
 		branches = append(branches, bson.M{
-			"case": BuildFilter(c.Case),
+			"case": BuildAggregate(c.Case),
 			"then": c.Then,
 		})
 	}
