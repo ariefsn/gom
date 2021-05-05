@@ -101,13 +101,13 @@ func (d *Demo) UpdateStruct(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Filter:    gom.Eq("RealName", "Scarlett Johansson"),
 			Timeout:   10,
 		}).Cmd().Update(hero)
 	} else {
-		err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("RealName", "Scarlett Johansson")).Cmd().Update(hero)
+		_, err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("RealName", "Scarlett Johansson")).Cmd().Update(hero)
 	}
 
 	if err != nil {
@@ -127,13 +127,13 @@ func (d *Demo) UpdateMap(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Filter:    gom.Eq("Name", "Wolverine"),
 			Timeout:   10,
 		}).Cmd().Update(&hero)
 	} else {
-		err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("Name", "Wolverine")).Cmd().Update(&hero)
+		_, err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("Name", "Wolverine")).Cmd().Update(&hero)
 	}
 
 	if err != nil {
@@ -148,13 +148,13 @@ func (d *Demo) DeleteOne(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Filter:    gom.Eq("Name", "Batman"),
 			Timeout:   10,
 		}).Cmd().DeleteOne()
 	} else {
-		err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Filter(gom.Eq("Name", "Batman")).Cmd().DeleteOne()
 	}
 
 	if err != nil {
@@ -199,6 +199,103 @@ func (d *Demo) GetAll(g *gom.Gom) int64 {
 		}).Cmd().Get()
 	} else {
 		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Result(&res).Cmd().Get()
+	}
+
+	if err != nil {
+		toolkit.Println(err.Error())
+		return 0
+	}
+
+	toolkit.Println(cFilter, "of", cTotal)
+
+	for _, h := range res {
+		toolkit.Println(h)
+	}
+
+	return cFilter
+}
+
+// GetAllWithSkip = example get all data with skip but without filter or pipe
+func (d *Demo) GetAllWithSkip(g *gom.Gom) int64 {
+	toolkit.Println("===== Get All With Skip =====")
+	res := []models.Hero{}
+
+	var cFilter, cTotal int64
+	var err error
+	if d.useParams {
+		cFilter, cTotal, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+			Result:    &res,
+			Timeout:   10,
+			Skip:      3,
+		}).Cmd().Get()
+	} else {
+		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(3).Result(&res).Cmd().Get()
+	}
+
+	if err != nil {
+		toolkit.Println(err.Error())
+		return 0
+	}
+
+	toolkit.Println(cFilter, "of", cTotal)
+
+	for _, h := range res {
+		toolkit.Println(h)
+	}
+
+	return cFilter
+}
+
+// GetAllWithLimit = example get all data with limit but without filter or pipe
+func (d *Demo) GetAllWithLimit(g *gom.Gom) int64 {
+	toolkit.Println("===== Get All With Limit =====")
+	res := []models.Hero{}
+
+	var cFilter, cTotal int64
+	var err error
+	if d.useParams {
+		cFilter, cTotal, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+			Result:    &res,
+			Timeout:   10,
+			Limit:     2,
+		}).Cmd().Get()
+	} else {
+		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Limit(3).Result(&res).Cmd().Get()
+	}
+
+	if err != nil {
+		toolkit.Println(err.Error())
+		return 0
+	}
+
+	toolkit.Println(cFilter, "of", cTotal)
+
+	for _, h := range res {
+		toolkit.Println(h)
+	}
+
+	return cFilter
+}
+
+// GetAllWithSkipLimit = example get all data with skip limit but without filter or pipe
+func (d *Demo) GetAllWithSkipLimit(g *gom.Gom) int64 {
+	toolkit.Println("===== Get All With Skip Limit =====")
+	res := []models.Hero{}
+
+	var cFilter, cTotal int64
+	var err error
+	if d.useParams {
+		cFilter, cTotal, err = g.Set(&gom.SetParams{
+			TableName: "hero",
+			Result:    &res,
+			Timeout:   10,
+			Skip:      2,
+			Limit:     1,
+		}).Cmd().Get()
+	} else {
+		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(2).Limit(1).Result(&res).Cmd().Get()
 	}
 
 	if err != nil {

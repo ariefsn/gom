@@ -44,6 +44,11 @@ func main() {
 		d.DeleteOne(g)
 		d.GetAll(g)
 	}
+
+	d.GetAll(g)
+	d.GetAllWithSkip(g)
+	d.GetAllWithLimit(g)
+	d.GetAllWithSkipLimit(g)
 	d.GetOne(g)
 	d.FilterEq(g)
 	d.FilterNe(g)

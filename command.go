@@ -8,6 +8,7 @@ import (
 	"github.com/eaciit/toolkit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Command = command struct
@@ -42,6 +43,10 @@ func (c *Command) Get() (int64, int64, error) {
 	ctx, cancelFunc := c.set.GetContext()
 	defer cancelFunc()
 
+	if tableName == "" {
+		return 0, 0, errors.New("table name not defined")
+	}
+
 	collection := client.Database(c.set.gom.GetDatabase()).Collection(tableName)
 
 	var cur *mongo.Cursor
@@ -62,7 +67,17 @@ func (c *Command) Get() (int64, int64, error) {
 	countFilter := int64(0)
 
 	if len(c.set.pipe) == 0 {
-		countFilter, _ = collection.CountDocuments(ctx, c.set.filter)
+		opt := []*options.CountOptions{}
+
+		if c.set.skip != nil {
+			opt = append(opt, options.Count().SetSkip(int64(*c.set.skip)))
+		}
+
+		if c.set.limit != nil {
+			opt = append(opt, options.Count().SetLimit(int64(*c.set.limit)))
+		}
+
+		countFilter, _ = collection.CountDocuments(ctx, c.set.filter, opt...)
 	} else {
 		f := bson.M{}
 		for _, e := range c.set.buildPipe() {
@@ -135,7 +150,6 @@ func (c *Command) Insert(data interface{}) (interface{}, error) {
 
 	id := res.InsertedID
 
-	toolkit.Println("Inserted ID:", id)
 	return id, nil
 }
 
@@ -162,12 +176,11 @@ func (c *Command) InsertAll(data interface{}) ([]interface{}, error) {
 
 	ids := res.InsertedIDs
 
-	toolkit.Println("Inserted IDs:", ids)
 	return ids, nil
 }
 
 // Update = update data with filter or pipe
-func (c *Command) Update(data interface{}) error {
+func (c *Command) Update(data interface{}) (int64, error) {
 	client := c.set.gom.GetClient()
 
 	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
@@ -175,11 +188,11 @@ func (c *Command) Update(data interface{}) error {
 	dataM, err := c.set.buildData(data, false)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if len(c.set.filter.(bson.M)) == 0 {
-		return errors.New("filter can't be empty")
+		return 0, errors.New("filter can't be empty")
 	}
 
 	ctx, cancelFunc := c.set.GetContext()
@@ -190,22 +203,20 @@ func (c *Command) Update(data interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	toolkit.Println("Documents updated:", res.MatchedCount)
-
-	return nil
+	return res.MatchedCount, nil
 }
 
 // DeleteOne = delete one data with filter or pipe
-func (c *Command) DeleteOne() error {
+func (c *Command) DeleteOne() (int64, error) {
 	client := c.set.gom.GetClient()
 
 	collection := client.Database(c.set.gom.GetDatabase()).Collection(c.set.tableName)
 
 	if len(c.set.filter.(bson.M)) == 0 {
-		return errors.New("filter can't be empty")
+		return 0, errors.New("filter can't be empty")
 	}
 
 	ctx, cancelFunc := c.set.GetContext()
@@ -214,12 +225,10 @@ func (c *Command) DeleteOne() error {
 	res, err := collection.DeleteOne(ctx, c.set.filter)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	toolkit.Println("Document deleted: ", res.DeletedCount)
-
-	return nil
+	return res.DeletedCount, nil
 }
 
 // DeleteAll = delete all data with filter or pipe
@@ -236,8 +245,6 @@ func (c *Command) DeleteAll() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	toolkit.Println("Documents deleted: ", res.DeletedCount)
 
 	return res.DeletedCount, nil
 }
@@ -256,8 +263,6 @@ func (c *Command) Drop() error {
 	if err != nil {
 		return err
 	}
-
-	toolkit.Println(toolkit.Sprintf("Collection %s has been deleted", c.set.tableName))
 
 	return nil
 }
