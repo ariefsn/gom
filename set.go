@@ -163,7 +163,7 @@ func (s *Set) Filter(filter *Filter) *Set {
 
 			main[string(filter.Op)] = insideArr
 
-		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort, OpExists, OpElemMatch:
+		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort, OpExists:
 			inside[string(filter.Op)] = filter.Value
 			main[filter.Field] = inside
 
@@ -268,6 +268,9 @@ func (s *Set) Filter(filter *Filter) *Set {
 			// main.Set(field, toolkit.M{}.Set("$not", filter.Items[0].Field))
 			// toolkit.Println(toolkit.JsonStringIndent(main, "\n"))
 
+		case OpElemMatch:
+			inside[string(filter.Op)] = s.Filter(filter.Value.(*Filter))
+			main[filter.Field] = inside
 		}
 
 		s.filter = main
