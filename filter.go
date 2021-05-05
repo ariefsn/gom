@@ -48,6 +48,8 @@ const (
 	OpBetweenEq = "betweenEq"
 	// OpRangeEq is Range Equal
 	OpRangeEq = "rangeEq"
+	// ElemMatch is Elem Match operator
+	OpElemMatch = "$elemMatch"
 )
 
 // Filter holding Items, Field, Operation, and Value
@@ -204,6 +206,15 @@ func Exists(field string, values bool) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpExists
+	f.Value = values
+	return f
+}
+
+// Exists match the documents that contain the field
+func ElemMatch(field string, values *Filter) *Filter {
+	f := new(Filter)
+	f.Field = field
+	f.Op = OpElemMatch
 	f.Value = values
 	return f
 }
