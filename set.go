@@ -269,7 +269,7 @@ func (s *Set) Filter(filter *Filter) *Set {
 			// toolkit.Println(toolkit.JsonStringIndent(main, "\n"))
 
 		case OpElemMatch:
-			inside[string(filter.Op)] = s.Filter(filter.Value.(*Filter))
+			inside[string(filter.Op)] = s.Filter(filter.Value.(*Filter)).filter
 			main[filter.Field] = inside
 		}
 

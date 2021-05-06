@@ -157,20 +157,20 @@ func BetweenEq(field string, gte, lte interface{}) *Filter {
 }
 
 // In create new filter with In operation
-func In(field string, invalues ...interface{}) *Filter {
+func In(field string, inValues ...interface{}) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpIn
-	f.Value = invalues
+	f.Value = inValues
 	return f
 }
 
 // Nin create new filter with Nin operation
-func Nin(field string, invalues ...interface{}) *Filter {
+func Nin(field string, ninValues ...interface{}) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpNin
-	f.Value = invalues
+	f.Value = ninValues
 	return f
 }
 
@@ -184,37 +184,37 @@ func Contains(field string, values ...string) *Filter {
 }
 
 // StartWith create new filter with StartWith operation
-func StartWith(field string, values string) *Filter {
+func StartWith(field string, value string) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpStartWith
-	f.Value = values
+	f.Value = value
 	return f
 }
 
 // EndWith create new filter with EndWith operation
-func EndWith(field string, values string) *Filter {
+func EndWith(field string, value string) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpEndWith
-	f.Value = values
+	f.Value = value
 	return f
 }
 
 // Exists match the documents that contain the field
-func Exists(field string, values bool) *Filter {
+func Exists(field string, value bool) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpExists
-	f.Value = values
+	f.Value = value
 	return f
 }
 
 // Exists match the documents that contain the field
-func ElemMatch(field string, values *Filter) *Filter {
+func ElemMatch(field string, filter *Filter) *Filter {
 	f := new(Filter)
 	f.Field = field
 	f.Op = OpElemMatch
-	f.Value = values
+	f.Value = filter
 	return f
 }
