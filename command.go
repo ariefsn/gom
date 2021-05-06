@@ -24,6 +24,11 @@ func newCommand(s *Set) *Command {
 	return c
 }
 
+// Pipe = Return Pipe Aggregate
+func (c *Command) Pipe() []bson.M {
+	return c.set.buildPipe()
+}
+
 // Get = get data. it'll use Filter as default. if pipe not null => Filter will be ignored
 func (c *Command) Get() (int64, int64, error) {
 	tableName := c.set.tableName
@@ -54,11 +59,11 @@ func (c *Command) Get() (int64, int64, error) {
 
 	cur, err = collection.Aggregate(ctx, c.set.buildPipe())
 
-	defer cur.Close(ctx)
-
 	if err != nil {
 		return 0, 0, errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
 	}
+
+	defer cur.Close(ctx)
 
 	cur.All(ctx, result)
 
