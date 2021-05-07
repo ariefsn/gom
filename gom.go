@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/eaciit/toolkit"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
@@ -32,21 +31,6 @@ func (g *Gom) Set(SetParams *SetParams) *Set {
 	s := newSet(g, SetParams)
 
 	return s
-}
-
-// ObjectIDFromHex = make object id from hex
-func (g *Gom) ObjectIDFromHex(s string) primitive.ObjectID {
-	var oid [12]byte
-
-	o, err := primitive.ObjectIDFromHex(s)
-
-	if err != nil {
-		return oid
-	}
-
-	copy(oid[:], o[:])
-
-	return oid
 }
 
 // CheckClient = Check connection successfull or not

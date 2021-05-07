@@ -721,14 +721,14 @@ func (d *Demo) GetByPipe(g *gom.Gom) {
 	toolkit.Println("===== Get By Pipe =====")
 	res := []models.Hero{}
 	pipe := []bson.M{
-		bson.M{
+		{
 			"$match": bson.M{
 				"Name": bson.M{
 					"$in": []string{"Superman", "Batman", "Flash"},
 				},
 			},
 		},
-		bson.M{
+		{
 			"$sort": bson.M{
 				"RealName": -1,
 			},

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -149,130 +148,7 @@ func (s *Set) Sort(field, sortBy string) *Set {
 func (s *Set) Filter(filter *Filter) *Set {
 
 	if filter != nil {
-		main := bson.M{}
-		inside := bson.M{}
-
-		switch filter.Op {
-		case OpAnd, OpOr:
-			insideArr := []interface{}{}
-
-			for _, fi := range filter.Items {
-				fRes := s.Filter(fi)
-				insideArr = append(insideArr, fRes.filter)
-			}
-
-			main[string(filter.Op)] = insideArr
-
-		case OpEq, OpNe, OpGt, OpGte, OpLt, OpLte, OpIn, OpNin, OpSort, OpExists:
-			inside[string(filter.Op)] = filter.Value
-			main[filter.Field] = inside
-
-		// case OpSort:
-		// 	inside.Set(string(filter.Op), filter.Value)
-		// 	main.Set(filter.Field, inside)
-
-		case OpBetween, OpRange:
-			switch filter.Value.([]interface{})[0].(type) {
-			case int:
-				gt := 0
-				lt := 0
-
-				if filter.Value != nil {
-					gt = filter.Value.([]interface{})[0].(int)
-					lt = filter.Value.([]interface{})[1].(int)
-				}
-
-				main[filter.Field] = bson.M{
-					"$gt": gt,
-					"$lt": lt,
-				}
-			case time.Time:
-				gt := time.Now()
-				lt := time.Now()
-
-				if filter.Value != nil {
-					gt = filter.Value.([]interface{})[0].(time.Time)
-					lt = filter.Value.([]interface{})[1].(time.Time)
-				}
-
-				main[filter.Field] = bson.M{
-					"$gt": gt,
-					"$lt": lt,
-				}
-			}
-
-		case OpBetweenEq, OpRangeEq:
-			switch filter.Value.([]interface{})[0].(type) {
-			case int:
-				gt := 0
-				lt := 0
-
-				if filter.Value != nil {
-					gt = filter.Value.([]interface{})[0].(int)
-					lt = filter.Value.([]interface{})[1].(int)
-				}
-
-				main[filter.Field] = bson.M{
-					"$gte": gt,
-					"$lte": lt,
-				}
-			case time.Time:
-				gt := time.Now()
-				lt := time.Now()
-
-				if filter.Value != nil {
-					gt = filter.Value.([]interface{})[0].(time.Time)
-					lt = filter.Value.([]interface{})[1].(time.Time)
-				}
-
-				main[filter.Field] = bson.M{
-					"$gte": gt,
-					"$lte": lt,
-				}
-			}
-
-		case OpStartWith:
-			main[filter.Field] = bson.M{
-				"$regex":   fmt.Sprintf("^%s.*$", filter.Value),
-				"$options": "i",
-			}
-
-		case OpEndWith:
-			main[filter.Field] = bson.M{
-				"$regex":   fmt.Sprintf("^.*%s$", filter.Value),
-				"$options": "i",
-			}
-
-		case OpContains:
-			if len(filter.Value.([]string)) > 1 {
-				bfs := []interface{}{}
-				for _, ff := range filter.Value.([]string) {
-					pfm := bson.M{}
-					pfm[filter.Field] = bson.M{
-						"$regex":   fmt.Sprintf(".*%s.*", ff),
-						"$options": "i",
-					}
-
-					bfs = append(bfs, pfm)
-				}
-				main["$or"] = bfs
-			} else {
-				main[filter.Field] = bson.M{
-					"$regex":   fmt.Sprintf(".*%s.*", filter.Value.([]string)[0]),
-					"$options": "i",
-				}
-			}
-
-		case OpNot:
-			// field := filter.Items[0].Field
-			// main.Set(field, toolkit.M{}.Set("$not", filter.Items[0].Field))
-			// toolkit.Println(toolkit.JsonStringIndent(main, "\n"))
-
-		case OpElemMatch:
-			inside[string(filter.Op)] = s.Filter(filter.Value.(*Filter)).filter
-			main[filter.Field] = inside
-		}
-
+		main := BuildFilter(filter)
 		s.filter = main
 	} else {
 		s.filter = bson.M{}
@@ -301,14 +177,6 @@ func (s *Set) buildPipe() []bson.M {
 		}
 	}
 
-	if s.sortField != nil {
-		pipe = append(pipe, bson.M{
-			"$sort": bson.M{
-				*s.sortField: s.sortBy,
-			},
-		})
-	}
-
 	if s.skip != nil {
 		pipe = append(pipe, bson.M{
 			"$skip": s.skip,
@@ -318,6 +186,14 @@ func (s *Set) buildPipe() []bson.M {
 	if s.limit != nil {
 		pipe = append(pipe, bson.M{
 			"$limit": s.limit,
+		})
+	}
+
+	if s.sortField != nil {
+		pipe = append(pipe, bson.M{
+			"$sort": bson.M{
+				*s.sortField: s.sortBy,
+			},
 		})
 	}
 
