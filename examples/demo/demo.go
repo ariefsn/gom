@@ -189,16 +189,16 @@ func (d *Demo) GetAll(g *gom.Gom) int64 {
 	toolkit.Println("===== Get All =====")
 	res := []models.Hero{}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Result(&res).Cmd().Get()
+		cTotal, err = g.Set(nil).Timeout(10).Table("hero").Result(&res).Cmd().Get()
 	}
 
 	if err != nil {
@@ -206,13 +206,13 @@ func (d *Demo) GetAll(g *gom.Gom) int64 {
 		return 0
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
 	}
 
-	return cFilter
+	return int64(len(res))
 }
 
 // GetAllWithSkip = example get all data with skip but without filter or pipe
@@ -220,17 +220,17 @@ func (d *Demo) GetAllWithSkip(g *gom.Gom) int64 {
 	toolkit.Println("===== Get All With Skip =====")
 	res := []models.Hero{}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Timeout:   10,
 			Skip:      3,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(3).Result(&res).Cmd().Get()
+		cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(3).Result(&res).Cmd().Get()
 	}
 
 	if err != nil {
@@ -238,13 +238,13 @@ func (d *Demo) GetAllWithSkip(g *gom.Gom) int64 {
 		return 0
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
 	}
 
-	return cFilter
+	return int64(len(res))
 }
 
 // GetAllWithLimit = example get all data with limit but without filter or pipe
@@ -252,17 +252,17 @@ func (d *Demo) GetAllWithLimit(g *gom.Gom) int64 {
 	toolkit.Println("===== Get All With Limit =====")
 	res := []models.Hero{}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Timeout:   10,
 			Limit:     2,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Limit(3).Result(&res).Cmd().Get()
+		cTotal, err = g.Set(nil).Timeout(10).Table("hero").Limit(3).Result(&res).Cmd().Get()
 	}
 
 	if err != nil {
@@ -270,13 +270,13 @@ func (d *Demo) GetAllWithLimit(g *gom.Gom) int64 {
 		return 0
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
 	}
 
-	return cFilter
+	return int64(len(res))
 }
 
 // GetAllWithSkipLimit = example get all data with skip limit but without filter or pipe
@@ -284,10 +284,10 @@ func (d *Demo) GetAllWithSkipLimit(g *gom.Gom) int64 {
 	toolkit.Println("===== Get All With Skip Limit =====")
 	res := []models.Hero{}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Timeout:   10,
@@ -295,7 +295,7 @@ func (d *Demo) GetAllWithSkipLimit(g *gom.Gom) int64 {
 			Limit:     1,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(2).Limit(1).Result(&res).Cmd().Get()
+		cTotal, err = g.Set(nil).Timeout(10).Table("hero").Skip(2).Limit(1).Result(&res).Cmd().Get()
 	}
 
 	if err != nil {
@@ -303,13 +303,13 @@ func (d *Demo) GetAllWithSkipLimit(g *gom.Gom) int64 {
 		return 0
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
 	}
 
-	return cFilter
+	return int64(len(res))
 }
 
 // GetOne = example get one data without filter or pipe
@@ -343,7 +343,7 @@ func (d *Demo) Sort(g *gom.Gom, sortBy string) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			SortField: "RealName",
@@ -351,7 +351,7 @@ func (d *Demo) Sort(g *gom.Gom, sortBy string) {
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Sort("RealName", sortBy).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Sort("RealName", sortBy).Cmd().Get()
 	}
 
 	if err != nil {
@@ -395,14 +395,14 @@ func (d *Demo) FilterNe(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Ne("Name", "Ironman"),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Ne("Name", "Ironman")).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Ne("Name", "Ironman")).Cmd().Get()
 	}
 
 	if err != nil {
@@ -420,17 +420,17 @@ func (d *Demo) FilterGt(g *gom.Gom) {
 	toolkit.Println("===== Greater Than =====")
 	res := []models.Hero{}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Gt("Age", 35),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Gt("Age", 35)).Cmd().Get()
+		cTotal, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Gt("Age", 35)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -438,7 +438,7 @@ func (d *Demo) FilterGt(g *gom.Gom) {
 		return
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
@@ -452,14 +452,14 @@ func (d *Demo) FilterGte(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Gte("Age", 43),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Gte("Age", 43)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Gte("Age", 43)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -479,14 +479,14 @@ func (d *Demo) FilterLt(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Lt("Age", 35),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Lt("Age", 35)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Lt("Age", 35)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -506,14 +506,14 @@ func (d *Demo) FilterLte(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Lte("Age", 27),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Lte("Age", 27)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Lte("Age", 27)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -533,14 +533,14 @@ func (d *Demo) FilterBetweenOrRange(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Between("Age", 27, 38),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Between("Age", 27, 38)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Between("Age", 27, 38)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -560,14 +560,14 @@ func (d *Demo) FilterContains(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Contains("Name", "der"),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Contains("Name", "der")).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Contains("Name", "der")).Cmd().Get()
 	}
 
 	if err != nil {
@@ -587,14 +587,14 @@ func (d *Demo) FilterStartWith(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.StartWith("Name", "S"),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.StartWith("Name", "S")).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.StartWith("Name", "S")).Cmd().Get()
 	}
 
 	if err != nil {
@@ -614,14 +614,14 @@ func (d *Demo) FilterEndWith(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.EndWith("Name", "man"),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.EndWith("Name", "man")).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.EndWith("Name", "man")).Cmd().Get()
 	}
 
 	if err != nil {
@@ -641,14 +641,14 @@ func (d *Demo) FilterIn(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.In("Name", "Green Arrow", "Red Arrow"),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.In("Name", "Green Arrow", "Red Arrow")).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.In("Name", "Green Arrow", "Red Arrow")).Cmd().Get()
 	}
 
 	if err != nil {
@@ -669,14 +669,14 @@ func (d *Demo) FilterNin(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Nin("Name", names...),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Nin("Name", names...)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Nin("Name", names...)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -696,14 +696,14 @@ func (d *Demo) FilterExists(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    gom.Exists("ealName", true),
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Exists("RealName", true)).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(gom.Exists("RealName", true)).Cmd().Get()
 	}
 
 	if err != nil {
@@ -735,17 +735,17 @@ func (d *Demo) GetByPipe(g *gom.Gom) {
 		},
 	}
 
-	var cFilter, cTotal int64
+	var cTotal int64
 	var err error
 	if d.useParams {
-		cFilter, cTotal, err = g.Set(&gom.SetParams{
+		cTotal, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Pipe:      pipe,
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		cFilter, cTotal, err = g.Set(nil).Table("hero").Result(&res).Timeout(10).Pipe(pipe).Cmd().Get()
+		cTotal, err = g.Set(nil).Table("hero").Result(&res).Timeout(10).Pipe(pipe).Cmd().Get()
 	}
 
 	if err != nil {
@@ -753,7 +753,7 @@ func (d *Demo) GetByPipe(g *gom.Gom) {
 		return
 	}
 
-	toolkit.Println(cFilter, "of", cTotal)
+	toolkit.Println(len(res), "of", cTotal)
 
 	for _, h := range res {
 		toolkit.Println(h)
@@ -768,14 +768,14 @@ func (d *Demo) FilterAnd(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    filter,
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(filter).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(filter).Cmd().Get()
 	}
 
 	if err != nil {
@@ -796,14 +796,14 @@ func (d *Demo) FilterOr(g *gom.Gom) {
 
 	var err error
 	if d.useParams {
-		_, _, err = g.Set(&gom.SetParams{
+		_, err = g.Set(&gom.SetParams{
 			TableName: "hero",
 			Result:    &res,
 			Filter:    filter,
 			Timeout:   10,
 		}).Cmd().Get()
 	} else {
-		_, _, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(filter).Cmd().Get()
+		_, err = g.Set(nil).Table("hero").Timeout(10).Result(&res).Filter(filter).Cmd().Get()
 	}
 
 	if err != nil {

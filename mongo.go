@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -34,13 +37,14 @@ type mongoDB struct {
 
 // Config = Mongo config struct
 type Config struct {
-	Username      string
-	Password      string
-	Host          string
-	Port          int
-	Database      string
-	MaxPool       int
-	AuthMechanism string
+	Username        string
+	Password        string
+	Host            string
+	Port            int
+	Database        string
+	MaxPool         int
+	AuthMechanism   string
+	RegistryBuilder bool
 }
 
 // newMongo = Init new mongo
@@ -70,6 +74,14 @@ func (m *mongoDB) SetClient() {
 
 	if config.MaxPool > 0 {
 		clientOptions.SetMaxPoolSize(uint64(config.MaxPool))
+	}
+
+	if config.RegistryBuilder {
+		// register custom codec registry to handle empty interfaces
+		rb := bson.NewRegistryBuilder()
+		rb.RegisterTypeMapEntry(bsontype.EmbeddedDocument, reflect.TypeOf(bson.M{}))
+
+		clientOptions.SetRegistry(rb.Build())
 	}
 
 	client, err := mongo.NewClient(clientOptions)

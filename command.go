@@ -8,7 +8,6 @@ import (
 	"github.com/eaciit/toolkit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Command = command struct
@@ -30,17 +29,17 @@ func (c *Command) Pipe() []bson.M {
 }
 
 // Get = get data. it'll use Filter as default. if pipe not null => Filter will be ignored
-func (c *Command) Get() (int64, int64, error) {
+func (c *Command) Get() (int64, error) {
 	tableName := c.set.tableName
 	result := c.set.result
 
 	if result == nil {
-		return 0, 0, errors.New("result argument must be set")
+		return 0, errors.New("result argument must be set")
 	}
 
 	resultVal := reflect.ValueOf(result)
 	if resultVal.Kind() != reflect.Ptr && resultVal.Kind() != reflect.Slice {
-		return 0, 0, errors.New("result argument must be a slice")
+		return 0, errors.New("result argument must be a slice")
 	}
 
 	client := c.set.gom.GetClient()
@@ -49,7 +48,7 @@ func (c *Command) Get() (int64, int64, error) {
 	defer cancelFunc()
 
 	if tableName == "" {
-		return 0, 0, errors.New("table name not defined")
+		return 0, errors.New("table name not defined")
 	}
 
 	collection := client.Database(c.set.gom.GetDatabase()).Collection(tableName)
@@ -60,41 +59,20 @@ func (c *Command) Get() (int64, int64, error) {
 	cur, err = collection.Aggregate(ctx, c.set.buildPipe())
 
 	if err != nil {
-		return 0, 0, errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
+		return 0, errors.New(toolkit.Sprintf("Error finding all documents: %s", err.Error()))
 	}
 
 	defer cur.Close(ctx)
 
-	cur.All(ctx, result)
+	err = cur.All(ctx, result)
+
+	if err != nil {
+		return 0, errors.New(toolkit.Sprintf("Decode error: %s", err.Error()))
+	}
 
 	countTotal, _ := collection.EstimatedDocumentCount(ctx)
 
-	countFilter := int64(0)
-
-	if len(c.set.pipe) == 0 {
-		opt := []*options.CountOptions{}
-
-		if c.set.skip != nil {
-			opt = append(opt, options.Count().SetSkip(int64(*c.set.skip)))
-		}
-
-		if c.set.limit != nil {
-			opt = append(opt, options.Count().SetLimit(int64(*c.set.limit)))
-		}
-
-		countFilter, _ = collection.CountDocuments(ctx, c.set.filter, opt...)
-	} else {
-		f := bson.M{}
-		for _, e := range c.set.buildPipe() {
-			if e["$match"] != nil {
-				f = e["$match"].(bson.M)
-				break
-			}
-		}
-		countFilter, _ = collection.CountDocuments(ctx, f)
-	}
-
-	return countFilter, countTotal, nil
+	return countTotal, nil
 }
 
 // GetOne = get one data. it'll use Filter as default, pipe ignored.
