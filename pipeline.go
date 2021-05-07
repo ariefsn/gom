@@ -133,5 +133,7 @@ func PipeGroup(id string, fields bson.M) bson.M {
 		m[k] = v
 	}
 
-	return m
+	return bson.M{
+		"$group": m,
+	}
 }
